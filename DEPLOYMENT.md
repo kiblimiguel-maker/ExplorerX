@@ -36,6 +36,20 @@ Der Anon-/Publishable-Key ist für Browser-Apps vorgesehen. Niemals einen `servi
 
 ## 3. Supabase für Produktion konfigurieren
 
+Vor dem Deployment prüfen, dass `supabase/place_rate_limit_update.sql` nach `supabase/admin_hardening.sql` ausgeführt wurde. Der folgende Read-only-Check zeigt die aktive Triggerfunktion und den Trigger:
+
+```sql
+select pg_get_functiondef('private.limit_place_spam()'::regprocedure);
+
+select tgname, tgenabled
+from pg_trigger
+where tgrelid = 'public.places'::regclass
+  and tgname = 'limit_place_spam'
+  and not tgisinternal;
+```
+
+Für einen funktionalen Test mit separaten Testkonten: Ein normaler Nutzer darf fünf Orte innerhalb einer Stunde veröffentlichen; der sechste muss mit `place hourly rate limit exceeded` scheitern. Ein in `public.admin_users` eingetragener Nutzer darf den sechsten Ort veröffentlichen. Das Tageslimit in einer Staging-Datenbank mit 20 beziehungsweise 100 Einträgen prüfen und Testdaten danach entfernen.
+
 Unter **Authentication > URL Configuration** nach dem ersten Deploy setzen:
 
 ```text

@@ -12,6 +12,7 @@ vi.mock('../components/MapView', () => ({
 }))
 
 const renderPage = () => render(<MemoryRouter><AddPlacePage/></MemoryRouter>)
+const addPhoto = (container: HTMLElement) => fireEvent.change(container.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [new File(['photo'], 'ort.webp', { type: 'image/webp' })] } })
 const setGeolocation = (getCurrentPosition?: Geolocation['getCurrentPosition']) => {
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: getCurrentPosition ? { getCurrentPosition } : undefined })
 }
@@ -24,9 +25,10 @@ describe('AddPlacePage', () => {
   })
 
   it('rejects a private house number', async () => {
-    renderPage()
+    const { container } = renderPage()
     fireEvent.change(screen.getByLabelText('Name des Ortes'), { target: { value: 'Toller Platz' } })
     fireEvent.change(screen.getByLabelText('Beschreibung'), { target: { value: 'Ein wirklich toller öffentlicher Platz für alle.' } })
+    addPhoto(container)
     fireEvent.change(screen.getByPlaceholderText('z.B. Josefwiese, Zürich'), { target: { value: 'Teststrasse 42' } })
     fireEvent.click(screen.getByText('Kartenposition wählen'))
     fireEvent.click(screen.getByRole('button', { name: /Ort veröffentlichen/ }))
@@ -36,7 +38,7 @@ describe('AddPlacePage', () => {
   it('uses the current location and passes it when creating a place', async () => {
     const getCurrentPosition = vi.fn((success: PositionCallback) => success({ coords: { latitude: 47.3769, longitude: 8.5417 } } as GeolocationPosition))
     setGeolocation(getCurrentPosition)
-    renderPage()
+    const { container } = renderPage()
     fireEvent.click(screen.getByRole('button', { name: 'Aktuellen Standort verwenden' }))
     expect(await screen.findByText(/Aktueller Standort übernommen/)).toBeInTheDocument()
     expect(screen.getByText('Marker 47.37690, 8.54170')).toBeInTheDocument()
@@ -44,6 +46,7 @@ describe('AddPlacePage', () => {
 
     fireEvent.change(screen.getByLabelText('Name des Ortes'), { target: { value: 'Flussplatz' } })
     fireEvent.change(screen.getByLabelText('Beschreibung'), { target: { value: 'Ein öffentlicher Platz direkt am schönen Fluss.' } })
+    addPhoto(container)
     fireEvent.click(screen.getByRole('button', { name: /Ort veröffentlichen/ }))
     await waitFor(() => expect(mocks.addPlace).toHaveBeenCalledWith(expect.objectContaining({ latitude: 47.3769, longitude: 8.5417 }), expect.any(Function)))
   })

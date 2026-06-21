@@ -6,6 +6,7 @@ import { usePlaces } from '../context/PlacesContext'
 import { categories, placeFeatures, type Category, type Coordinates, type PlaceFeature } from '../types'
 import { isPrivateAddress } from '../lib/validation'
 import PlacePhotoUploader, { type PhotoPreview } from '../components/PlacePhotoUploader'
+import CategoryIcon from '../components/CategoryIcon'
 
 export default function AddPlacePage() {
   const { addPlace } = usePlaces()
@@ -19,6 +20,10 @@ export default function AddPlacePage() {
   const [locationMessage, setLocationMessage] = useState('')
   const [locationError, setLocationError] = useState('')
   const [uploadStatus, setUploadStatus] = useState('')
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [address, setAddress] = useState('')
+  const [category, setCategory] = useState<Category>('Sport')
   const photosRef = useRef(photos)
   useEffect(() => { photosRef.current = photos }, [photos])
 
@@ -81,17 +86,18 @@ export default function AddPlacePage() {
     event.preventDefault()
     setError('')
     const data = new FormData(event.currentTarget)
-    const name = String(data.get('name') || '').trim()
-    const description = String(data.get('description') || '').trim()
-    const address = String(data.get('address') || '').trim()
-    if (name.length < 3) return setError('Der Name muss mindestens 3 Zeichen lang sein.')
-    if (description.length < 15) return setError('Beschreibe den Ort bitte mit mindestens 15 Zeichen.')
+    const nextName = String(data.get('name') || '').trim()
+    const nextDescription = String(data.get('description') || '').trim()
+    const nextAddress = String(data.get('address') || '').trim()
+    if (nextName.length < 3) return setError('Der Name muss mindestens 3 Zeichen lang sein.')
+    if (nextDescription.length < 15) return setError('Beschreibe den Ort bitte mit mindestens 15 Zeichen.')
     if (!position) return setError('Setze den Ort bitte auf der Karte.')
-    if (isPrivateAddress(address)) return setError('Bitte keine private Hausnummer angeben. Ein öffentlicher Ortsname reicht.')
+    if (!photos.length) return setError('Füge mindestens ein echtes Foto des Ortes hinzu.')
+    if (isPrivateAddress(nextAddress)) return setError('Bitte keine private Hausnummer angeben. Ein öffentlicher Ortsname reicht.')
     setSaving(true)
     setUploadStatus(photos.length ? `0 von ${photos.length} Fotos hochgeladen` : 'Ort wird gespeichert…')
     try {
-      const place = await addPlace({ name, description, category: data.get('category') as Category, address: address || undefined, latitude: position.latitude, longitude: position.longitude, photos: photos.map((item) => item.file), features: [...features] }, (uploaded, total) => setUploadStatus(`${uploaded} von ${total} Fotos hochgeladen`))
+      const place = await addPlace({ name: nextName, description: nextDescription, category, address: nextAddress || undefined, latitude: position.latitude, longitude: position.longitude, photos: photos.map((item) => item.file), features: [...features] }, (uploaded, total) => setUploadStatus(`${uploaded} von ${total} Fotos hochgeladen`))
       navigate(`/places/${place.id}`)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Der Ort konnte gerade nicht gespeichert werden. Bitte versuche es erneut.')
@@ -101,15 +107,20 @@ export default function AddPlacePage() {
     }
   }
 
+  const completedSteps = [name.trim().length >= 3, true, Boolean(position), photos.length > 0, description.trim().length >= 15].filter(Boolean).length
+  const completion = completedSteps * 20
+  const quality = completion >= 100 ? 'Sehr gut' : completion >= 60 ? 'Fast fertig' : 'Mehr Details nötig'
+
   return <div className="add-page">
     <div className="page-title"><div><h1>Neuen Ort teilen</h1><p>Hilf anderen, draussen etwas Neues zu entdecken.</p></div></div>
+    <section className="add-progress" aria-label={`Formular zu ${completion} Prozent ausgefüllt`}><div><strong>{quality}</strong><span>{completion}% fertig</span></div><div className="add-progress-track"><span style={{ width: `${completion}%` }}/></div><ol><li className={name.trim().length >= 3 ? 'done' : ''}>Name</li><li className="done">Kategorie</li><li className={position ? 'done' : ''}>Standort</li><li className={photos.length ? 'done' : ''}>Bilder</li><li className={description.trim().length >= 15 ? 'done' : ''}>Veröffentlichen</li></ol></section>
     <div className="privacy-warning"><ShieldCheck size={20}/><span><strong>Nur öffentliche Orte.</strong> Poste keine privaten Wohnadressen, Live-Standorte oder Bilder von Personen ohne Erlaubnis.</span></div>
     <form className="add-layout" onSubmit={submit}>
       <div className="form-panel">
-        <label>Name des Ortes<input name="name" maxLength={80} placeholder="z.B. Basketballplatz am Fluss" required/></label>
-        <label>Kategorie<select name="category" required>{categories.map((category) => <option key={category}>{category}</option>)}</select></label>
-        <label>Beschreibung<textarea name="description" maxLength={600} rows={5} placeholder="Was macht diesen Ort besonders? Was kann man dort machen?" required/></label>
-        <label>Öffentliche Adresse oder Ortsname<input name="address" maxLength={120} placeholder="z.B. Josefwiese, Zürich"/><small>Keine privaten Hausnummern oder Wohnadressen.</small></label>
+        <label>Name des Ortes<input name="name" value={name} onChange={(event) => setName(event.target.value)} maxLength={80} placeholder="z.B. Basketballplatz am Fluss" required/></label>
+        <fieldset className="category-picker"><legend>Kategorie</legend><input type="hidden" name="category" value={category}/><div>{categories.map((item) => <button type="button" key={item} className={category === item ? 'active' : ''} aria-pressed={category === item} onClick={() => setCategory(item)}><CategoryIcon category={item}/>{item}</button>)}</div></fieldset>
+        <label>Beschreibung<textarea name="description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={600} rows={5} placeholder="Was macht diesen Ort besonders? Was kann man dort machen?" required/></label>
+        <label>Öffentliche Adresse oder Ortsname<input name="address" value={address} onChange={(event) => setAddress(event.target.value)} maxLength={120} placeholder="z.B. Josefwiese, Zürich"/><small>Keine privaten Hausnummern oder Wohnadressen.</small></label>
         <fieldset className="feature-picker"><legend>Ausstattung und Eigenschaften</legend>{placeFeatures.map((feature) => <label key={feature}><input type="checkbox" checked={features.has(feature)} onChange={() => toggleFeature(feature)}/><span>{feature}</span></label>)}</fieldset>
         <PlacePhotoUploader photos={photos} disabled={saving} maxBatch={10} onAdd={onPhotos} onRemove={removePhoto}/>
         <div className="form-safety"><ShieldCheck size={20}/><span>Teile nur öffentliche Orte und Bilder, die du verwenden darfst.</span></div>
@@ -123,6 +134,7 @@ export default function AddPlacePage() {
         <button className="picker-location-button" type="button" onClick={useCurrentLocation} disabled={locating || saving}>{locating ? <LoaderCircle className="spin" size={18}/> : <LocateFixed size={18}/>} {locating ? 'Standort wird ermittelt…' : 'Aktuellen Standort verwenden'}</button>
         {locationMessage && <p className="location-success" role="status"><Check size={16}/>{locationMessage}</p>}
         {locationError && <p className="form-error location-error" role="alert">{locationError}</p>}
+        <div className="add-card-preview" aria-label="Vorschau der Ortskarte">{photos[0] ? <img src={photos[0].url} alt="Vorschau des Titelbilds"/> : <div><MapPin/><span>Dein Titelbild erscheint hier</span></div>}<section><span><CategoryIcon category={category}/>{category}</span><strong>{name.trim() || 'Name deines Ortes'}</strong><small>{address.trim() || 'Öffentlicher Ort'}</small></section></div>
         <MapView places={[]} picked={position} onPick={pickPosition}/>
         {position && <small>{position.latitude.toFixed(5)}, {position.longitude.toFixed(5)}</small>}
       </div>

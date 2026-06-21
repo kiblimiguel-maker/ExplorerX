@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { Bookmark, Compass, Flame, Map, Plus, ShieldCheck, UserRound, UsersRound, X } from 'lucide-react'
+import { Bell, Compass, Map, Plus, ShieldCheck, UserRound, X } from 'lucide-react'
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { usePlaces } from './context/PlacesContext'
 import { useSocial } from './context/SocialContext'
@@ -37,9 +37,7 @@ function PublicOnly({ children }: { children: ReactNode }) {
 const links = [
   { to: '/discover', label: 'Entdecken', icon: Compass },
   { to: '/map', label: 'Karte', icon: Map },
-  { to: '/trending', label: 'Trending', icon: Flame },
-  { to: '/favorites', label: 'Favoriten', icon: Bookmark },
-  { to: '/friends', label: 'Freunde', icon: UsersRound },
+  { to: '/friends', label: 'Aktivität', icon: Bell },
 ]
 
 export default function App() {
@@ -50,8 +48,8 @@ export default function App() {
       <NavLink className="brand" to="/"><img className="brand-icon" src="/icons/icon-192.png" alt=""/><strong>Explorer<span>X</span></strong><span className="tagline">Rausgehen. Neues entdecken.</span></NavLink>
       <nav className="desktop-nav">{links.map(({ to, label, icon: Icon }) => <NavLink to={to} key={to}><Icon size={19}/>{label}</NavLink>)}</nav>
       <NavLink className="primary-button compact" to="/add"><Plus size={18}/> Ort hinzufügen</NavLink>
-      {isAdmin && <NavLink className="profile-link admin-link" to="/admin" aria-label="Adminbereich"><ShieldCheck size={20}/></NavLink>}
-      <NavLink className="profile-link" to={user ? '/profile' : '/login'} aria-label="Profil"><UserRound size={20}/></NavLink>
+      {isAdmin && <NavLink className="profile-link profile-link-labeled admin-link" to="/admin"><ShieldCheck size={19}/><span>Admin</span></NavLink>}
+      <NavLink className="profile-link profile-link-labeled" to={user ? '/profile' : '/login'}><UserRound size={19}/><span>{user ? 'Profil' : 'Anmelden'}</span></NavLink>
     </header>
     {dataMode === 'demo' && <div className="mode-banner" role="alert"><strong>Demo-Modus:</strong> Supabase fehlt ({missingSupabaseVariables.join(', ')}). Änderungen bleiben nur in diesem Browser.</div>}
     {dataMode === 'offline' && <div className="mode-banner mode-banner-error" role="alert"><strong>Offline-Modus:</strong> Supabase ist nicht erreichbar. ExplorerX zeigt die letzte lokale Kopie.</div>}
@@ -74,6 +72,6 @@ export default function App() {
       <Route path="*" element={<NotFoundPage />} />
     </Routes></Suspense></main>
     <Onboarding/>
-    <nav className="mobile-nav">{links.slice(0, 3).map(({ to, label, icon: Icon }) => <NavLink to={to} key={to}><Icon size={21}/><span>{label}</span></NavLink>)}<NavLink to="/add"><Plus size={21}/><span>Hinzufügen</span></NavLink><NavLink to={user ? '/profile' : '/login'}><UserRound size={21}/><span>Profil</span></NavLink></nav>
+    <nav className="mobile-nav"><NavLink to="/discover"><Compass size={21}/><span>Entdecken</span></NavLink><NavLink to="/map"><Map size={21}/><span>Karte</span></NavLink><NavLink className="mobile-add-action" to="/add"><Plus size={22}/><span>Hinzufügen</span></NavLink><NavLink to="/friends"><Bell size={21}/><span>Aktivität</span></NavLink><NavLink to={user ? '/profile' : '/login'}><UserRound size={21}/><span>Profil</span></NavLink></nav>
   </div>
 }

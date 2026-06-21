@@ -1,5 +1,6 @@
-import { Award, Camera, Check, ChevronRight, Compass, Footprints, LoaderCircle, Search, UserMinus, UserPlus, UsersRound, X } from 'lucide-react'
+import { Award, Check, ChevronRight, Clock3, Compass, LoaderCircle, Search, UserMinus, UserPlus, UsersRound, X } from 'lucide-react'
 import { useCallback, useDeferredValue, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import AvatarGroup from '../components/AvatarGroup'
 import PremiumEmptyState from '../components/PremiumEmptyState'
 import ProductHero from '../components/ProductHero'
@@ -16,7 +17,7 @@ function ProfileAvatar({ profile, large = false }: { profile?: Pick<FriendProfil
 type FriendPreview = Pick<FriendProfile, 'id' | 'display_name' | 'avatar_url'> & { bio?: string | null }
 
 export default function FriendsPage() {
-  const { user, stats, achievements } = useSocial()
+  const { user, achievements } = useSocial()
   const { places } = usePlaces()
   const [friendships, setFriendships] = useState<Friendship[]>([])
   const [query, setQuery] = useState('')
@@ -46,8 +47,9 @@ export default function FriendsPage() {
     }
   }, [friendships, user])
   const friendProfiles = useMemo(() => user ? groups.friends.map((item) => friendProfileFor(item, user.id)).filter((profile): profile is NonNullable<typeof profile> => Boolean(profile)) : [], [groups.friends, user])
-  const communityPhotos = useMemo(() => places.reduce((sum, place) => sum + (place.photos_count || 0), 0), [places])
   const unlocked = achievements.filter((achievement) => achievement.unlocked)
+  const friendProfileMap = useMemo(() => new Map(friendProfiles.map((profile) => [profile.id, profile])), [friendProfiles])
+  const friendDiscoveries = useMemo(() => places.filter((place) => Boolean(place.created_by && friendProfileMap.has(place.created_by))).sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 8), [friendProfileMap, places])
 
   const runSearch = useCallback(async (value: string) => {
     if (!user || value.trim().length < 2) return
@@ -79,15 +81,9 @@ export default function FriendsPage() {
   return <div className="content-page friends-page social-product-page">
     <ProductHero
       className="community-product-hero"
-      title="Zusammen wird draussen noch besser."
-      description="Finde deine Community, teile echte Entdeckungen und sieh, welche Freunde schon unterwegs waren."
-      aside={<AvatarGroup profiles={friendProfiles} label={groups.friends.length ? `${groups.friends.length} Freunde` : 'Dein Circle wartet'}/>} 
-      metrics={[
-        { label: 'Freunde', value: groups.friends.length, icon: <UsersRound/> },
-        { label: 'Besuchte Orte', value: stats.visited, icon: <Footprints/> },
-        { label: 'Ortsfotos', value: communityPhotos, icon: <Camera/> },
-        { label: 'Eigene Orte', value: stats.places, icon: <Compass/> },
-      ]}
+      title="Deine Community"
+      description="Finde Explorer, teile echte Entdeckungen und sieh, was dein Circle draussen erlebt."
+      aside={groups.friends.length ? <AvatarGroup profiles={friendProfiles} label={`${groups.friends.length} ${groups.friends.length === 1 ? 'Freund' : 'Freunde'}`}/> : undefined}
     />
 
     <form className="friend-search friend-search-live" onSubmit={search}>
@@ -102,6 +98,8 @@ export default function FriendsPage() {
     {visibleResults.length > 0 && <section className="community-block search-results-block"><div className="community-heading"><div><h2>Explorer gefunden</h2><p>Echte Profile aus deiner ExplorerX-Community.</p></div><span>{visibleResults.length}</span></div><div className="people-grid people-grid-premium">{visibleResults.map((profile) => <article className="person-card person-card-premium" key={profile.id}><ProfileAvatar profile={profile} large/><div className="person-card-copy"><strong>{profile.display_name || 'Explorer'}</strong><p>{profile.bio || 'Dieses Profil hat noch keine Beschreibung.'}</p></div><button className="primary-button" disabled={busyId === profile.id || relatedIds.has(profile.id)} onClick={() => perform(profile.id, () => sendFriendRequest(profile.id), 'Freundschaftsanfrage gesendet.')}><UserPlus/>{relatedIds.has(profile.id) ? 'Bereits verbunden' : 'Anfragen'}</button></article>)}</div></section>}
 
     {!loading && groups.incoming.length > 0 && <section className="community-block requests-block"><div className="community-heading"><div><h2>Neue Anfragen</h2><p>Menschen, die gemeinsam mit dir entdecken möchten.</p></div><span>{groups.incoming.length}</span></div><div className="request-card-grid">{groups.incoming.map((item) => <article className="request-card" key={item.id}><ProfileAvatar profile={item.requester} large/><div><strong>{item.requester?.display_name || 'Explorer'}</strong><span>Möchte deinem Explorer Circle beitreten</span></div><div className="request-actions"><button className="accept" onClick={() => perform(item.id, () => answerFriendRequest(item.id, 'accepted'), 'Anfrage angenommen.')} disabled={busyId === item.id} aria-label="Anfrage annehmen"><Check/> Annehmen</button><button onClick={() => perform(item.id, () => answerFriendRequest(item.id, 'rejected'), 'Anfrage abgelehnt.')} disabled={busyId === item.id} aria-label="Anfrage ablehnen"><X/> Ablehnen</button></div></article>)}</div></section>}
+
+    <section className="community-block community-activity-feed"><div className="community-heading"><div><h2>Aktivität aus deinem Circle</h2><p>Neue Orte, die deine Freunde wirklich geteilt haben.</p></div><Clock3/></div>{friendDiscoveries.length ? <div className="activity-feed-list">{friendDiscoveries.map((place) => { const explorer = place.created_by ? friendProfileMap.get(place.created_by) : undefined; return <article key={place.id}><UserAvatar className="friend-avatar" url={explorer?.avatar_url} name={explorer?.display_name}/><div><strong>{explorer?.display_name || 'Explorer'}</strong><span>hat <Link to={`/places/${place.id}`}>{place.name}</Link> entdeckt</span><small>{new Intl.DateTimeFormat('de-CH', { dateStyle: 'medium' }).format(new Date(place.created_at))}</small></div><Link className="activity-place-link" to={`/places/${place.id}`} aria-label={`${place.name} öffnen`}><ChevronRight/></Link></article>})}</div> : <PremiumEmptyState compact icon={<Compass/>} title="Hier wird es bald lebendig" description={groups.friends.length ? 'Sobald Freunde neue Orte teilen, erscheinen ihre echten Aktivitäten hier.' : 'Suche oben nach Explorern und baue deinen persönlichen Circle auf.'}/>}</section>
 
     <div className="community-layout">
       <section className="community-block friends-showcase"><div className="community-heading"><div><h2>Meine Freunde</h2><p>Dein persönlicher Circle für neue Abenteuer.</p></div><span>{groups.friends.length}</span></div>{loading ? <div className="friend-card-skeletons"><span/><span/><span/></div> : groups.friends.length ? <div className="friend-card-grid">{groups.friends.map((item) => { const profile = friendProfileFor(item, user.id); return <article className="friend-profile-card" key={item.id}><div className="friend-profile-cover"/><ProfileAvatar profile={profile} large/><div className="friend-profile-copy"><strong>{profile?.display_name || 'Explorer'}</strong><span>Freund seit {new Intl.DateTimeFormat('de-CH', { dateStyle: 'medium' }).format(new Date(item.updated_at))}</span></div><div className="friend-profile-actions"><button className="profile-open" onClick={() => setOpenProfile(profile)}><Compass/> Profil öffnen</button><button className="danger-subtle" onClick={() => perform(item.id, () => removeFriendship(item.id), 'Freund entfernt.')} disabled={busyId === item.id} aria-label={`${profile?.display_name || 'Freund'} entfernen`}><UserMinus/></button></div></article> })}</div> : <PremiumEmptyState icon={<UsersRound/>} title="Dein Circle beginnt hier" description="Suche oben nach einem Anzeigenamen und sende deine erste Anfrage."/>}</section>

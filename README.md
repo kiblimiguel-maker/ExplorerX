@@ -47,7 +47,7 @@ npm run preview
 
 1. Auf `https://supabase.com` ein kostenloses Projekt erstellen.
 2. Im Supabase Dashboard **SQL Editor > New query** öffnen.
-3. In einem frischen Projekt nacheinander `supabase/schema.sql`, `supabase/v2_migration.sql`, `supabase/launch_hardening.sql`, `supabase/ux_upgrade.sql`, `supabase/admin_hardening.sql`, `supabase/community_photos.sql` und `supabase/social_places.sql` ausführen. Die Skripte erstellen Schema, Social-Funktionen, Adressvalidierung und Filterfelder. Es werden keine Beispielorte oder künstlichen Interaktionen angelegt.
+3. In einem frischen Projekt nacheinander `supabase/schema.sql`, `supabase/v2_migration.sql`, `supabase/launch_hardening.sql`, `supabase/ux_upgrade.sql`, `supabase/admin_hardening.sql`, `supabase/place_rate_limit_update.sql`, `supabase/community_photos.sql` und `supabase/social_places.sql` ausführen. Die Skripte erstellen Schema, Social-Funktionen, Adressvalidierung und Filterfelder. Es werden keine Beispielorte oder künstlichen Interaktionen angelegt.
 4. Unter **Project Settings > API** die Project URL und den **Anon Key** (bei neueren Projekten: den clientseitigen Publishable Key) kopieren. Niemals `service_role` oder einen Secret Key im Browser verwenden.
 5. `.env.example` als `.env.local` anlegen und Werte einsetzen:
 
@@ -142,6 +142,10 @@ on conflict (user_id) do nothing;
 ```
 
 Anschliessend in ExplorerX ab- und wieder anmelden oder die Seite neu laden. Adminrollen können nicht über die App erstellt werden. Zum Entfernen einer Rolle im SQL Editor `delete from public.admin_users where user_id = 'USER-UUID';` ausführen.
+
+## Limit für neue Orte
+
+Nach `admin_hardening.sql` einmalig [supabase/place_rate_limit_update.sql](supabase/place_rate_limit_update.sql) ausführen. Normale Nutzer können danach höchstens fünf Orte in einer rollenden Stunde und zwanzig Orte in rollenden 24 Stunden veröffentlichen. Admins aus `public.admin_users` sind vom Stundenlimit ausgenommen und auf 100 Orte in 24 Stunden begrenzt. Die Migration behält den Triggernamen `limit_place_spam`, verändert keine RLS-Policy und serialisiert gleichzeitige Inserts pro Account.
 
 ## Community-Fotos
 

@@ -4,6 +4,7 @@ dist
 .env.*
 !.env.example
 .vercel
+design-qa-artifacts/
 coverage
 *.tsbuildinfo
 *.log

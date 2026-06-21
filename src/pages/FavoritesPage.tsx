@@ -1,4 +1,4 @@
-import { Bookmark, Compass, Grid2X2, Heart, LocateFixed, Search, Sparkles } from 'lucide-react'
+import { Bookmark, Compass, LocateFixed, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PlaceCard from '../components/PlaceCard'
@@ -26,7 +26,8 @@ export default function FavoritesPage() {
   const favoriteOrder = useMemo(() => new Map([...favoriteIds].map((id, index) => [id, index])), [favoriteIds])
   const favorites = useMemo(() => places.filter((place) => favoriteIds.has(place.id)), [favoriteIds, places])
   const categoryCounts = useMemo(() => favorites.reduce((counts, place) => counts.set(place.category, (counts.get(place.category) || 0) + 1), new Map<Category, number>()), [favorites])
-  const popularCategory = [...categoryCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'Noch offen'
+  const popularCategory: string = [...categoryCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'Noch offen'
+  const availableCategories = categories.filter((item) => item === 'Alle' || Boolean(categoryCounts.get(item)))
   const visibleFavorites = useMemo(() => {
     const filtered = favorites.filter((place) => (category === 'Alle' || place.category === category) && (!query.trim() || `${place.name} ${place.category} ${place.address || ''}`.toLowerCase().includes(query.trim().toLowerCase())))
     return filtered.sort((a, b) => {
@@ -45,15 +46,9 @@ export default function FavoritesPage() {
   return <div className="content-page favorites-page social-product-page">
     <ProductHero
       className="favorites-product-hero"
-      title="Deine Favoriten"
-      description="Deine persönliche Sammlung für Tage, an denen du einfach raus willst. Gespeichert von dir, empfohlen von der Community."
+      title="Meine Favoriten"
+      description={favorites.length ? `${favorites.length} gespeicherte ${favorites.length === 1 ? 'Entdeckung' : 'Entdeckungen'} für dein nächstes Abenteuer.` : 'Baue dir deine persönliche Sammlung aus echten Community-Orten auf.'}
       aside={<div className="saved-visual"><Bookmark/><span>{favorites.length}</span><small>Lieblingsorte</small></div>}
-      metrics={[
-        { label: 'Gespeicherte Orte', value: favorites.length, icon: <Bookmark/> },
-        { label: 'Kategorien', value: categoryCounts.size, icon: <Grid2X2/> },
-        { label: 'Beliebteste Kategorie', value: popularCategory, icon: <Heart/> },
-        { label: 'Community-Likes', value: favorites.reduce((sum, place) => sum + place.likes_count, 0), icon: <Sparkles/> },
-      ]}
     />
 
     {favorites.length ? <>
@@ -62,8 +57,12 @@ export default function FavoritesPage() {
         <SegmentedControl value={sort} onChange={changeSort} label="Favoriten sortieren" options={[{ value: 'recent', label: 'Zuletzt gespeichert' }, { value: 'liked', label: 'Meist geliked' }, { value: 'near', label: 'Nächstgelegen' }, { value: 'alpha', label: 'A–Z' }]}/>
       </section>
       {locationMessage && <p className="status-note"><LocateFixed/>{locationMessage}</p>}
-      <div className="collection-categories" aria-label="Favoriten nach Kategorie filtern">{categories.map((item) => <button type="button" key={item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{item}<span>{item === 'Alle' ? favorites.length : categoryCounts.get(item) || 0}</span></button>)}</div>
-      {visibleFavorites.length ? <div className="saved-places-grid">{visibleFavorites.map((place) => <PlaceCard key={place.id} place={place} userLocation={location} confirmFavoriteRemoval onLike={() => toggleLike(place.id)}/>)}</div> : <PremiumEmptyState icon={<Search/>} title="Keine Favoriten gefunden" description="Passe Suche oder Kategorie an, ohne deine Sammlung zu verändern." action={<button className="secondary-button" onClick={() => { setQuery(''); setCategory('Alle') }}>Filter zurücksetzen</button>}/>} 
+      <div className="collection-categories" aria-label="Favoriten nach Kategorie filtern">{availableCategories.map((item) => <button type="button" key={item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{item}<span>{item === 'Alle' ? favorites.length : categoryCounts.get(item)}</span></button>)}</div>
+      {popularCategory !== 'Noch offen' && <p className="collection-context">Am häufigsten gespeichert: <strong>{popularCategory}</strong></p>}
+      {visibleFavorites.length
+        ? <div className="saved-places-grid">{visibleFavorites.map((place) => <PlaceCard compact key={place.id} place={place} userLocation={location} confirmFavoriteRemoval onLike={() => toggleLike(place.id)}/>)}</div>
+        : <PremiumEmptyState icon={<Search/>} title="Keine Favoriten gefunden" description="Passe Suche oder Kategorie an, ohne deine Sammlung zu verändern." action={<button className="secondary-button" onClick={() => { setQuery(''); setCategory('Alle') }}>Filter zurücksetzen</button>}/>
+      }
     </> : <PremiumEmptyState icon={<Compass/>} title={user || !supabase ? 'Noch keine Lieblingsorte gespeichert' : 'Melde dich für Favoriten an'} description="Tippe bei einem echten Ort auf das Lesezeichen. Deine Sammlung erscheint dann genau hier." action={<Link className="primary-button" to={user || !supabase ? '/discover' : '/login'}>{user || !supabase ? 'Orte entdecken' : 'Anmelden'}</Link>}/>} 
   </div>
 }

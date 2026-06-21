@@ -29,7 +29,7 @@ export default function PlacePhotoUploader({ photos, disabled = false, maxBatch 
       <button type="button" disabled={disabled} onClick={() => onRemove(index)} aria-label={index === 0 ? 'Foto entfernen' : `Foto ${index + 1} entfernen`}><X/></button>
     </div>)}</div>}
     {photos.length < maxBatch && <button className="photo-picker" type="button" disabled={disabled} onClick={() => inputRef.current?.click()}>
-      <Camera size={28}/><strong>{photos.length ? 'Weitere Fotos hinzufügen' : 'Fotos hinzufügen'}</strong>
+      <Camera size={28}/><strong>{photos.length ? 'Weitere Fotos hinzufügen' : 'Fotos hier hineinziehen oder auswählen'}</strong>
       <span>Du kannst mehrere Fotos hinzufügen · bis zu {maxBatch} pro Upload · je max. 4 MB</span>
     </button>}
     <input ref={inputRef} className="sr-only" aria-label="Fotos auswählen" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={disabled} onChange={(event) => {
