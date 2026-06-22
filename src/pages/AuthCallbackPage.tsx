@@ -1,7 +1,7 @@
 import { AlertCircle, LoaderCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { completeOAuthCallback, friendlyAuthError, technicalAuthError } from '../lib/auth'
+import { completeOAuthCallback, consumeAuthReturnTo, friendlyAuthError, technicalAuthError } from '../lib/auth'
 import { supabase } from '../lib/supabase'
 
 export default function AuthCallbackPage() {
@@ -21,7 +21,7 @@ export default function AuthCallbackPage() {
     completeOAuthCallback(supabase, window.location.href).then(() => {
       if (!active) return
       window.history.replaceState({}, document.title, '/auth/callback')
-      navigate('/map', { replace: true })
+      navigate(consumeAuthReturnTo(), { replace: true })
     }).catch((cause) => {
       if (!active) return
       const details = technicalAuthError(cause)

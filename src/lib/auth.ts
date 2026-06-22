@@ -11,6 +11,18 @@ export function friendlyAuthError(message: string) {
 }
 
 export const oauthCallbackUrl = (origin: string) => new URL('/auth/callback', origin).toString()
+const RETURN_TO_KEY = 'explorerx.auth.return-to'
+
+export function rememberAuthReturnTo(value?: string | null) {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/login') || value.startsWith('/auth/callback')) return
+  sessionStorage.setItem(RETURN_TO_KEY, value)
+}
+
+export function consumeAuthReturnTo() {
+  const value = sessionStorage.getItem(RETURN_TO_KEY)
+  sessionStorage.removeItem(RETURN_TO_KEY)
+  return value && value.startsWith('/') && !value.startsWith('//') ? value : '/map'
+}
 
 export async function startGoogleOAuth(client: SupabaseClient, origin: string) {
   const { data, error } = await client.auth.signInWithOAuth({

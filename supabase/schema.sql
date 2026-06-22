@@ -12,7 +12,7 @@ create table public.places (
   id uuid primary key default gen_random_uuid(),
   name text not null check (char_length(name) between 3 and 80),
   description text not null check (char_length(description) between 15 and 600),
-  category text not null check (category in ('Sport','Baden','Natur','Aussicht','Essen','Treffpunkt','Abenteuer','Sonstiges')),
+  category text not null check (category in ('Sport','Baden','Natur','Aussicht','Essen','Schule','Treffpunkt','Abenteuer','Sonstiges')),
   latitude double precision not null check (latitude between -90 and 90),
   longitude double precision not null check (longitude between -180 and 180),
   address text check (

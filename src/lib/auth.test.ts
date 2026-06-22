@@ -1,11 +1,22 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { completeOAuthCallback, friendlyAuthError, oauthCallbackUrl, signOutLocally, startGoogleOAuth } from './auth'
+import { completeOAuthCallback, consumeAuthReturnTo, friendlyAuthError, oauthCallbackUrl, rememberAuthReturnTo, signOutLocally, startGoogleOAuth } from './auth'
 
 const clientWith = (auth: Record<string, unknown>) => ({ auth }) as unknown as SupabaseClient
 
 describe('Google OAuth helpers', () => {
   it('explains disabled providers', () => expect(friendlyAuthError('Provider is not enabled')).toContain('nicht aktiviert'))
   it('builds the callback URL from the current origin', () => expect(oauthCallbackUrl('http://127.0.0.1:5173')).toBe('http://127.0.0.1:5173/auth/callback'))
+
+  it('preserves a safe invite route across Google OAuth', () => {
+    rememberAuthReturnTo('/friends?invite=user-2')
+    expect(consumeAuthReturnTo()).toBe('/friends?invite=user-2')
+    expect(consumeAuthReturnTo()).toBe('/map')
+  })
+
+  it('rejects external return URLs', () => {
+    rememberAuthReturnTo('//example.com/steal')
+    expect(consumeAuthReturnTo()).toBe('/map')
+  })
 
   it('starts Google OAuth with the exact callback URL', async () => {
     const signInWithOAuth = vi.fn().mockResolvedValue({ data: { url: 'https://accounts.google.com/' }, error: null })

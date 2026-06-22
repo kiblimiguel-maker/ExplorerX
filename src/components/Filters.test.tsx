@@ -11,5 +11,6 @@ it('keeps the compact category set focused on the primary choices', () => {
   render(<Filters compactCategories query="" onQuery={() => undefined} category="Alle" onCategory={() => undefined}/>)
   expect(screen.getByRole('button', { name: 'Baden' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Essen' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Schule' })).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Treffpunkt' })).not.toBeInTheDocument()
 })

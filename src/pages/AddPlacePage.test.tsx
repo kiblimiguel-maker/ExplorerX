@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import AddPlacePage from './AddPlacePage'
+import { LocationProvider } from '../context/LocationContext'
 
 const mocks = vi.hoisted(() => ({ addPlace: vi.fn() }))
 vi.mock('../context/PlacesContext', () => ({ usePlaces: () => ({ addPlace: mocks.addPlace }) }))
@@ -11,7 +12,7 @@ vi.mock('../components/MapView', () => ({
   </div>,
 }))
 
-const renderPage = () => render(<MemoryRouter><AddPlacePage/></MemoryRouter>)
+const renderPage = () => render(<MemoryRouter><LocationProvider><AddPlacePage/></LocationProvider></MemoryRouter>)
 const addPhoto = (container: HTMLElement) => fireEvent.change(container.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [new File(['photo'], 'ort.webp', { type: 'image/webp' })] } })
 const setGeolocation = (getCurrentPosition?: Geolocation['getCurrentPosition']) => {
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: getCurrentPosition ? { getCurrentPosition } : undefined })
@@ -21,6 +22,7 @@ describe('AddPlacePage', () => {
   beforeEach(() => {
     mocks.addPlace.mockReset()
     mocks.addPlace.mockResolvedValue({ id: 'created-place' })
+    sessionStorage.clear()
     setGeolocation()
   })
 
@@ -42,7 +44,7 @@ describe('AddPlacePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Aktuellen Standort verwenden' }))
     expect(await screen.findByText(/Aktueller Standort übernommen/)).toBeInTheDocument()
     expect(screen.getByText('Marker 47.37690, 8.54170')).toBeInTheDocument()
-    expect(getCurrentPosition).toHaveBeenCalledWith(expect.any(Function), expect.any(Function), { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 })
+    expect(getCurrentPosition).toHaveBeenCalledWith(expect.any(Function), expect.any(Function), { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 })
 
     fireEvent.change(screen.getByLabelText('Name des Ortes'), { target: { value: 'Flussplatz' } })
     fireEvent.change(screen.getByLabelText('Beschreibung'), { target: { value: 'Ein öffentlicher Platz direkt am schönen Fluss.' } })
@@ -75,6 +77,12 @@ describe('AddPlacePage', () => {
     fireEvent.change(input, { target: { files: [photo] } })
     expect(await screen.findByAltText('Foto-Vorschau')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Foto entfernen' })).toBeInTheDocument()
+  })
+
+  it('shows the privacy warning for school places', () => {
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Schule' }))
+    expect(screen.getByText(/keine privaten Daten, Stundenpläne oder Informationen über einzelne Schüler/i)).toBeInTheDocument()
   })
 
   it('rejects unsupported photos and more than ten files per batch', async () => {

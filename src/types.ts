@@ -1,4 +1,4 @@
-export const categories = ['Sport', 'Baden', 'Natur', 'Aussicht', 'Essen', 'Treffpunkt', 'Abenteuer', 'Sonstiges'] as const
+export const categories = ['Sport', 'Baden', 'Natur', 'Aussicht', 'Essen', 'Schule', 'Treffpunkt', 'Abenteuer', 'Sonstiges'] as const
 export type Category = (typeof categories)[number]
 export const placeFeatures = ['Kostenlos', 'Familienfreundlich', 'Parkplatz', 'Hund erlaubt', 'Sonnenuntergang', 'Indoor', 'Outdoor'] as const
 export type PlaceFeature = (typeof placeFeatures)[number]

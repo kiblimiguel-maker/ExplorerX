@@ -11,8 +11,8 @@ import type { Category, Place } from '../types'
 
 type Trend = Place & { recent_likes?: number; recent_comments?: number; trending_score?: number }
 type TrendPeriod = 'today' | 'week' | 'month' | 'all'
-type TrendCategory = 'Alle' | 'Baden' | 'Aussicht' | 'Natur' | 'Essen' | 'Urban' | 'Abenteuer'
-const trendCategories: TrendCategory[] = ['Alle', 'Baden', 'Aussicht', 'Natur', 'Essen', 'Urban', 'Abenteuer']
+type TrendCategory = 'Alle' | 'Baden' | 'Aussicht' | 'Natur' | 'Essen' | 'Schule' | 'Urban' | 'Abenteuer'
+const trendCategories: TrendCategory[] = ['Alle', 'Baden', 'Aussicht', 'Natur', 'Essen', 'Schule', 'Urban', 'Abenteuer']
 const TRENDING_NOW = Date.now()
 const TRENDING_TODAY = new Date(TRENDING_NOW).setHours(0, 0, 0, 0)
 const categoryValue = (value: TrendCategory): Category | null => value === 'Alle' ? null : value === 'Urban' ? 'Treffpunkt' : value

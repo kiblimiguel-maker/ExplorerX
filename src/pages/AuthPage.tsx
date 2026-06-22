@@ -1,6 +1,7 @@
 import { CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
-import { friendlyAuthError, startGoogleOAuth, technicalAuthError } from '../lib/auth'
+import { useLocation } from 'react-router-dom'
+import { friendlyAuthError, rememberAuthReturnTo, startGoogleOAuth, technicalAuthError } from '../lib/auth'
 import { isSupabaseConfigured, missingSupabaseVariables, supabase } from '../lib/supabase'
 
 function GoogleIcon() {
@@ -11,6 +12,7 @@ export default function AuthPage() {
   const [error, setError] = useState('')
   const [technicalError, setTechnicalError] = useState('')
   const [loading, setLoading] = useState(false)
+  const location = useLocation()
 
   const loginWithGoogle = async () => {
     setError(''); setTechnicalError('')
@@ -20,6 +22,7 @@ export default function AuthPage() {
     }
     setLoading(true)
     try {
+      rememberAuthReturnTo((location.state as { from?: string } | null)?.from)
       await startGoogleOAuth(supabase, window.location.origin)
     } catch (cause) {
       const details = technicalAuthError(cause)

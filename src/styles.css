@@ -1748,6 +1748,15 @@ body { background:radial-gradient(circle at 72% -12%,rgba(59,130,246,.12),transp
   .discovery-heading>small { display:none; }
 }
 
+.friends-tab-panel .friend-search-live { position:relative; top:auto; max-width:none; margin:0 0 24px; box-shadow:none; }
+.friends-tab-panel .friend-profile-card { flex-basis:auto; }
+@media (max-width:780px) {
+  .friends-tab-panel .friend-card-grid { display:grid; grid-template-columns:1fr; overflow:visible; }
+  .friends-tab-panel .friend-profile-card { width:100%; max-width:none; }
+  .map-sidebar-product .sheet-handle { min-height:44px; }
+  .map-sidebar-product .map-locate { width:44px; height:44px; }
+}
+
 /* Live community pass: quieter product hierarchy and touch-first controls */
 :root {
   --bg-primary:#0b1220;
@@ -1886,6 +1895,77 @@ body { color:var(--text-primary); background:var(--bg-primary); }
 @media (prefers-reduced-motion:reduce) {
   .community-product-hero .avatar-group .avatar,.live-orbit>span,.map-pin-trending,.friend-card-skeletons span,.discovery-loading-premium span { animation:none!important; }
   .place-card,.friend-profile-card,.podium-card,.place-image { transition:none!important; }
+}
+
+/* Friends, school and voluntary location experience */
+.friends-page { max-width:1240px; }
+.community-product-hero { min-height:180px; background:#111a29!important; }
+.community-product-hero .product-hero-copy { max-width:720px; }
+.friend-invite-button { min-height:46px; white-space:nowrap; }
+.friends-tabs { display:flex; gap:6px; margin:24px 0 10px; padding:5px; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.07); scrollbar-width:none; }
+.friends-tabs::-webkit-scrollbar { display:none; }
+.friends-tabs button { min-width:max-content; min-height:46px; display:flex; align-items:center; gap:8px; padding:0 15px; color:#9eacba; border:0; border-radius:12px; background:transparent; cursor:pointer; font:inherit; font-size:12px; font-weight:750; transition:color .18s,background .18s; }
+.friends-tabs button:hover { color:#fff; background:#172235; }
+.friends-tabs button.active { color:#fff; background:#1c2b40; }
+.friends-tabs button svg { width:18px; }
+.friends-tabs button span { min-width:20px; height:20px; display:grid; place-items:center; border-radius:999px; color:#dce8f3; background:#2b3d55; font-size:9px; }
+.friends-tab-panel { min-height:330px; margin-top:14px; padding:clamp(20px,3vw,32px); border-radius:20px; background:#111a29; }
+.friend-invite-context { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:16px; margin:22px 0; padding:18px; border:1px solid rgba(168,224,99,.22); border-radius:18px; background:#142133; }
+.friend-invite-context>div { display:grid; gap:4px; }
+.friend-invite-context small,.friend-invite-context p { color:#9dabb9; }
+.friend-invite-context p { margin:0; font-size:11px; }
+.friend-invite-context .icon-button { min-width:44px; min-height:44px; display:grid; place-items:center; color:#a9b6c3; border:0; border-radius:12px; background:#1b2a3e; cursor:pointer; }
+.friend-search-live { position:relative; top:auto; max-width:none; min-height:58px; margin:0 0 24px; border:0; background:#172336; box-shadow:none; }
+.friends-tab-panel .community-heading>svg { color:#aab8c5; background:#1b293c; }
+.friend-card-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.friend-profile-card { padding:18px; border:0; border-radius:18px; background:#172235; }
+.friend-profile-card>.friend-avatar { border:0; }
+.friend-profile-actions { grid-template-columns:1fr 44px; }
+.friend-profile-actions button { min-height:44px; }
+.person-card-premium,.request-card { border:0; border-radius:17px; background:#172235; }
+.connection-state { min-height:44px; display:flex; align-items:center; justify-content:center; gap:7px; padding:0 14px; color:#aebbc7; border:0; border-radius:12px; background:#1e2d42; font-weight:750; }
+.empty-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
+.text-button { min-height:44px; display:flex; align-items:center; gap:7px; color:#bdd0e0; border:0; background:transparent; cursor:pointer; font-weight:750; }
+.friend-visited-places { margin-bottom:26px; }
+.friend-visited-places>h3,.outgoing-requests h3,.friend-profile-visits h3 { margin:0 0 13px; font-size:14px; }
+.friend-visited-places>div { display:flex; gap:12px; overflow-x:auto; padding-bottom:8px; }
+.friend-visited-places .place-card { flex:0 0 min(300px,82vw); }
+.friend-profile-visits { width:100%; display:grid; gap:7px; margin-top:16px; text-align:left; }
+.friend-profile-visits>a { min-height:44px; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:9px; padding:0 12px; color:#e9f1f6; border-radius:11px; background:#19263a; }
+.friend-profile-visits>a svg { width:16px; color:#92a9bf; }
+.school-safety-note { display:flex; gap:11px; margin:-7px 0 19px; padding:14px; color:#dce7f1; border-radius:13px; background:#17283b; font-size:11px; line-height:1.55; }
+.school-safety-note svg { flex:0 0 auto; color:#78a9dc; }
+.location-privacy { display:block; margin:9px 0 0; color:#92a1af; line-height:1.5; }
+.map-location-note { display:flex; align-items:flex-start; gap:7px; margin:7px 2px 12px; color:#a9b6c3; font-size:10px; line-height:1.45; }
+.map-location-note svg { width:16px; flex:0 0 auto; }
+.location-status-denied,.location-status-error { color:#f3b4b4!important; }
+.map-locate.active { color:#15200f; background:#a8e063; }
+.category-schule { color:#b8d9f7; background:rgba(79,143,216,.14); }
+.card-friend-visits,.popup-friend-visits { margin:10px 0 0; }
+.card-friend-visits .avatar-group-wrap,.popup-friend-visits .avatar-group-wrap { justify-content:flex-start; color:#b8c5d1; font-size:10px; }
+.card-friend-visits .avatar,.popup-friend-visits .avatar { width:25px; height:25px; flex-basis:25px; }
+
+@media (max-width:780px) {
+  .friends-tabs { margin-top:16px; padding-inline:0; }
+  .friends-tabs button { min-height:48px; padding-inline:12px; }
+  .friends-tab-panel { min-height:300px; padding:17px; border-radius:17px; }
+  .friend-invite-context { grid-template-columns:auto 1fr auto; padding:14px; }
+  .friend-invite-context .primary-button,.friend-invite-context .connection-state { grid-column:1/-1; width:100%; }
+  .friend-invite-context>.icon-button { grid-column:3; grid-row:1; }
+  .friend-card-grid { display:grid; grid-template-columns:1fr; overflow:visible; }
+  .friend-profile-card { max-width:none; width:100%; }
+  .people-grid-premium { grid-template-columns:1fr; }
+  .person-card-premium { grid-template-columns:auto minmax(0,1fr); }
+  .person-card-premium>.primary-button,.person-card-premium>.connection-state { grid-column:1/-1; width:100%; }
+}
+
+@media (max-width:360px) {
+  .friends-page { padding-inline:10px; }
+  .friends-tab-panel { padding:14px; }
+  .friends-tabs button { padding-inline:10px; font-size:10px; }
+  .friend-invite-context { grid-template-columns:1fr auto; }
+  .friend-invite-context>.friend-avatar { display:none; }
+  .community-heading { gap:10px; }
 }
 
 /* Calm product pass: content first, decoration second */

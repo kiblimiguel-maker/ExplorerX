@@ -25,7 +25,7 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user, isLoading } = useSocial(); const location = useLocation()
   if (isLoading) return <PageSkeleton/>
-  return user ? children : <Navigate to="/login" replace state={{ from: location.pathname }}/>
+  return user ? children : <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }}/>
 }
 
 function PublicOnly({ children }: { children: ReactNode }) {
@@ -37,7 +37,7 @@ function PublicOnly({ children }: { children: ReactNode }) {
 const links = [
   { to: '/discover', label: 'Entdecken', icon: Compass },
   { to: '/map', label: 'Karte', icon: Map },
-  { to: '/friends', label: 'Aktivität', icon: Bell },
+  { to: '/friends', label: 'Freunde', icon: Bell },
 ]
 
 export default function App() {
@@ -72,6 +72,6 @@ export default function App() {
       <Route path="*" element={<NotFoundPage />} />
     </Routes></Suspense></main>
     <Onboarding/>
-    <nav className="mobile-nav"><NavLink to="/discover"><Compass size={21}/><span>Entdecken</span></NavLink><NavLink to="/map"><Map size={21}/><span>Karte</span></NavLink><NavLink className="mobile-add-action" to="/add"><Plus size={22}/><span>Hinzufügen</span></NavLink><NavLink to="/friends"><Bell size={21}/><span>Aktivität</span></NavLink><NavLink to={user ? '/profile' : '/login'}><UserRound size={21}/><span>Profil</span></NavLink></nav>
+    <nav className="mobile-nav"><NavLink to="/discover"><Compass size={21}/><span>Entdecken</span></NavLink><NavLink to="/map"><Map size={21}/><span>Karte</span></NavLink><NavLink className="mobile-add-action" to="/add"><Plus size={22}/><span>Hinzufügen</span></NavLink><NavLink to="/friends"><Bell size={21}/><span>Freunde</span></NavLink><NavLink to={user ? '/profile' : '/login'}><UserRound size={21}/><span>Profil</span></NavLink></nav>
   </div>
 }

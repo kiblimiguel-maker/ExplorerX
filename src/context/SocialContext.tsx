@@ -15,6 +15,7 @@ type SocialContextValue = {
   favoriteIds: Set<string>
   visitedIds: Set<string>
   friendVisitCounts: Map<string, number>
+  friendVisitorsByPlace: Map<string, Array<Pick<Profile, 'id' | 'display_name' | 'avatar_url'>>>
   isAdmin: boolean
   isLoading: boolean
   message: string
@@ -42,6 +43,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => readDemoFavorites())
   const [visitedIds, setVisitedIds] = useState<Set<string>>(() => readDemoVisits())
   const [friendVisitCounts, setFriendVisitCounts] = useState<Map<string, number>>(new Map())
+  const [friendVisitorsByPlace, setFriendVisitorsByPlace] = useState<Map<string, Array<Pick<Profile, 'id' | 'display_name' | 'avatar_url'>>>>(new Map())
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(Boolean(supabase))
   const [message, setMessage] = useState('')
@@ -52,7 +54,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     setIsAdmin(false)
     if (!supabase || !nextUser) {
       setStats(EMPTY_STATS)
-      if (supabase) { setFavoriteIds(new Set()); setVisitedIds(new Set()); setFriendVisitCounts(new Map()) }
+      if (supabase) { setFavoriteIds(new Set()); setVisitedIds(new Set()); setFriendVisitCounts(new Map()); setFriendVisitorsByPlace(new Map()) }
       setIsLoading(false)
       return
     }
@@ -76,6 +78,17 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     const nextFriendVisits = new Map<string, number>()
     for (const visit of friendVisitsResult.data || []) nextFriendVisits.set(visit.place_id, (nextFriendVisits.get(visit.place_id) || 0) + 1)
     setFriendVisitCounts(nextFriendVisits)
+    const friendIds = [...new Set((friendVisitsResult.data || []).map((visit) => visit.user_id))]
+    const { data: friendProfiles } = friendIds.length
+      ? await supabase.from('users').select('id,display_name,avatar_url').in('id', friendIds)
+      : { data: [] }
+    const profilesById = new Map((friendProfiles || []).map((item) => [item.id, item]))
+    const nextVisitors = new Map<string, Array<Pick<Profile, 'id' | 'display_name' | 'avatar_url'>>>()
+    for (const visit of friendVisitsResult.data || []) {
+      const visitor = profilesById.get(visit.user_id)
+      if (visitor) nextVisitors.set(visit.place_id, [...(nextVisitors.get(visit.place_id) || []), visitor])
+    }
+    setFriendVisitorsByPlace(nextVisitors)
     const ownPlaces = placesResult.data || []
     setStats({ places: ownPlaces.length, likesReceived: ownPlaces.reduce((sum, item) => sum + item.likes_count, 0), visited: visitsResult.data?.length || 0 })
     setIsAdmin(Boolean(adminResult.data && !adminResult.error))
@@ -152,7 +165,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     await loadAccount(null)
   }, [loadAccount])
 
-  const value = useMemo(() => ({ user, profile, stats, achievements, favoriteIds, visitedIds, friendVisitCounts, isAdmin, isLoading, message, clearMessage: () => setMessage(''), toggleFavorite, toggleVisit, updateProfile, signOut }), [achievements, favoriteIds, friendVisitCounts, isAdmin, isLoading, message, profile, signOut, stats, toggleFavorite, toggleVisit, updateProfile, user, visitedIds])
+  const value = useMemo(() => ({ user, profile, stats, achievements, favoriteIds, visitedIds, friendVisitCounts, friendVisitorsByPlace, isAdmin, isLoading, message, clearMessage: () => setMessage(''), toggleFavorite, toggleVisit, updateProfile, signOut }), [achievements, favoriteIds, friendVisitCounts, friendVisitorsByPlace, isAdmin, isLoading, message, profile, signOut, stats, toggleFavorite, toggleVisit, updateProfile, user, visitedIds])
   return <SocialContext.Provider value={value}>{children}</SocialContext.Provider>
 }
 

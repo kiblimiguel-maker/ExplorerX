@@ -8,13 +8,15 @@ const friendMocks = vi.hoisted(() => ({
   send: vi.fn(),
   answer: vi.fn(),
   remove: vi.fn(),
+  activity: vi.fn(),
+  share: vi.fn(),
 }))
 
 vi.mock('../context/SocialContext', () => ({ useSocial: () => ({ user: { id: 'user-1' }, stats: { places: 0, visited: 0, likesReceived: 0 }, achievements: [] }) }))
 vi.mock('../context/PlacesContext', () => ({ usePlaces: () => ({ places: [] }) }))
 vi.mock('../lib/friendships', async () => {
   const actual = await vi.importActual<typeof import('../lib/friendships')>('../lib/friendships')
-  return { ...actual, loadFriendships: friendMocks.load, searchProfiles: friendMocks.search, sendFriendRequest: friendMocks.send, answerFriendRequest: friendMocks.answer, removeFriendship: friendMocks.remove }
+  return { ...actual, loadFriendships: friendMocks.load, searchProfiles: friendMocks.search, sendFriendRequest: friendMocks.send, answerFriendRequest: friendMocks.answer, removeFriendship: friendMocks.remove, loadFriendActivity: friendMocks.activity, shareFriendInvite: friendMocks.share }
 })
 
 const profile = (id: string, display_name: string) => ({ id, display_name, avatar_url: null })
@@ -26,32 +28,48 @@ const friendships = [
 ]
 
 beforeEach(() => {
+  vi.clearAllMocks()
   friendMocks.load.mockResolvedValue(friendships)
   friendMocks.search.mockResolvedValue([{ ...profile('user-6', 'Lina'), bio: 'Draussen unterwegs' }])
   friendMocks.send.mockResolvedValue(undefined)
   friendMocks.answer.mockResolvedValue(undefined)
   friendMocks.remove.mockResolvedValue(undefined)
+  friendMocks.activity.mockResolvedValue([])
+  friendMocks.share.mockResolvedValue('copied')
 })
 
 it('searches people and sends a friendship request', async () => {
   render(<MemoryRouter><FriendsPage/></MemoryRouter>)
-  await screen.findByText('Meine Freunde')
+  await screen.findByRole('button', { name: /Meine Freunde/ })
+  fireEvent.click(screen.getByRole('button', { name: /Freunde finden/ }))
   fireEvent.change(screen.getByPlaceholderText('Explorer nach Anzeigename suchen…'), { target: { value: 'Lina' } })
   fireEvent.click(screen.getByRole('button', { name: 'Suchen' }))
   await screen.findByText('Lina')
-  fireEvent.click(screen.getByRole('button', { name: /Anfragen/ }))
+  fireEvent.click(screen.getByRole('button', { name: 'Anfrage senden' }))
   await waitFor(() => expect(friendMocks.send).toHaveBeenCalledWith('user-6'))
 })
 
 it('accepts, rejects and removes friendships', async () => {
   render(<MemoryRouter><FriendsPage/></MemoryRouter>)
-  await screen.findByText('Mia')
+  fireEvent.click(await screen.findByRole('button', { name: /Anfragen/ }))
+  await screen.findByText('Leo')
   fireEvent.click(screen.getAllByRole('button', { name: 'Anfrage annehmen' })[0])
   await waitFor(() => expect(friendMocks.answer).toHaveBeenCalledWith('incoming-1', 'accepted'))
   fireEvent.click(screen.getAllByRole('button', { name: 'Anfrage ablehnen' })[1])
   await waitFor(() => expect(friendMocks.answer).toHaveBeenCalledWith('incoming-2', 'rejected'))
+  fireEvent.click(screen.getByRole('button', { name: /Meine Freunde/ }))
+  await screen.findByText('Mia')
   fireEvent.click(screen.getByRole('button', { name: 'Mia entfernen' }))
   await waitFor(() => expect(friendMocks.remove).toHaveBeenCalledWith('accepted'))
+  fireEvent.click(screen.getByRole('button', { name: /Anfragen/ }))
   fireEvent.click(screen.getByRole('button', { name: 'Anfrage zurückziehen' }))
   await waitFor(() => expect(friendMocks.remove).toHaveBeenCalledWith('outgoing'))
+})
+
+it('shares a friend invite without creating a friendship automatically', async () => {
+  render(<MemoryRouter><FriendsPage/></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: 'Freund einladen' }))
+  await waitFor(() => expect(friendMocks.share).toHaveBeenCalledWith('http://localhost:3000/friends?invite=user-1'))
+  expect(friendMocks.send).not.toHaveBeenCalled()
+  expect(await screen.findByText('Einladungslink kopiert.')).toBeInTheDocument()
 })

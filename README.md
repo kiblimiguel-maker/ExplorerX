@@ -5,8 +5,8 @@ ExplorerX v2 ist eine mobile-first Social-Discovery-App für öffentliche Freize
 ## Funktionen
 
 - Startseite, Entdecken, interaktive Leaflet-Karte, Detailseiten und Ranking
-- Freitextsuche sowie Filter für Sport, Baden, Natur, Aussicht, Essen, Treffpunkt, Abenteuer und Sonstiges
-- Standortfreigabe nur im Browser, Distanzberechnung und Explorer Score aus Suchtreffer, Likes und Nähe
+- Freitextsuche sowie Filter für Sport, Baden, Natur, Aussicht, Essen, Schule, Treffpunkt, Abenteuer und Sonstiges
+- Freiwillige Standortfreigabe nur im Browser-Tab für Distanzen, Near You und Kartenzentrierung; kein Live-Tracking in Supabase
 - Orte per Kartenklick hinzufügen, validieren und mit mehreren echten Community-Fotos veröffentlichen
 - Likes, deutlich sichtbare Meldefunktion, Lade-, Fehler- und Leerzustände
 - Supabase-Modus mit Auth, RLS und Storage; automatischer lokaler Demo-Modus ohne Umgebungsvariablen
@@ -47,7 +47,7 @@ npm run preview
 
 1. Auf `https://supabase.com` ein kostenloses Projekt erstellen.
 2. Im Supabase Dashboard **SQL Editor > New query** öffnen.
-3. In einem frischen Projekt nacheinander `supabase/schema.sql`, `supabase/v2_migration.sql`, `supabase/launch_hardening.sql`, `supabase/ux_upgrade.sql`, `supabase/admin_hardening.sql`, `supabase/place_rate_limit_update.sql`, `supabase/community_photos.sql` und `supabase/social_places.sql` ausführen. Die Skripte erstellen Schema, Social-Funktionen, Adressvalidierung und Filterfelder. Es werden keine Beispielorte oder künstlichen Interaktionen angelegt.
+3. In einem frischen Projekt nacheinander `supabase/schema.sql`, `supabase/v2_migration.sql`, `supabase/launch_hardening.sql`, `supabase/ux_upgrade.sql`, `supabase/admin_hardening.sql`, `supabase/place_rate_limit_update.sql`, `supabase/community_photos.sql`, `supabase/social_places.sql`, `supabase/add_school_category.sql` und `supabase/friend_visit_visibility.sql` ausführen. Die Skripte erstellen Schema, Social-Funktionen, Adressvalidierung und Filterfelder. Es werden keine Beispielorte oder künstlichen Interaktionen angelegt.
 4. Unter **Project Settings > API** die Project URL und den **Anon Key** (bei neueren Projekten: den clientseitigen Publishable Key) kopieren. Niemals `service_role` oder einen Secret Key im Browser verwenden.
 5. `.env.example` als `.env.local` anlegen und Werte einsetzen:
 
@@ -155,11 +155,13 @@ Damit eingeloggte Nutzer Fotos zu jedem aktiven Ort beitragen können, [supabase
 
 Nach den bisherigen Migrationen [supabase/social_places.sql](supabase/social_places.sql) im SQL Editor ausführen. Die Migration erstellt `friendships`, ergänzt sichere RLS-Policies und synchronisierte Community-Zähler. Freundschaften sind nur für die beiden beteiligten Nutzer sichtbar. Visits bleiben privat und sind ausschließlich für den eigenen Account sowie bestätigte Freunde lesbar; öffentliche Ortskarten sehen nur den anonymen Gesamtzähler.
 
-Nach dem Ausführen die App einmal neu laden. Unter `/friends` stehen Suche, Anfragen und die Freundesliste bereit. Auf jeder Ortsdetailseite kann „Ich war hier“ unabhängig gesetzt und wieder entfernt werden.
+Danach [supabase/friend_visit_visibility.sql](supabase/friend_visit_visibility.sql) ausführen. Die Datei bestätigt die private Visit-Regel und erlaubt ausschließlich bestätigten Freunden, gespeicherte Orte voneinander im Aktivitätsfeed zu sehen. Invite-Links benötigen keine zusätzliche Tabelle: Sie bereiten nur eine normale Freundschaftsanfrage vor, die weiterhin bestätigt werden muss.
+
+Für die Kategorie Schule zusätzlich [supabase/add_school_category.sql](supabase/add_school_category.sql) ausführen. Die Migration erweitert nur den bestehenden CHECK-Constraint und löscht keine Orte. Unter `/friends` stehen danach die Tabs Freunde, Anfragen, Suche und echte Aktivitäten bereit.
 
 ## Demo-Modus und Datenschutz
 
-Ohne Supabase-Variablen speichert ExplorerX selbst erstellte Orte, Likes und Meldungen unter `explorerx.*`-Schlüsseln im LocalStorage. Es werden in keinem Modus Beispielorte erzeugt. Sind keine echten Orte vorhanden, zeigt die App einen Empty State mit einer klaren Aktion zum ersten Beitrag. Fällt Supabase aus, wird die letzte lokale Kopie angezeigt; Schreiben ist dann deaktiviert, damit keine nicht synchronisierbaren Änderungen entstehen. Der freigegebene Nutzerstandort wird nie gespeichert oder übertragen. Offensichtliche private Hausnummern werden im Formular und zusätzlich in Postgres blockiert.
+Ohne Supabase-Variablen speichert ExplorerX selbst erstellte Orte, Likes und Meldungen unter `explorerx.*`-Schlüsseln im LocalStorage. Es werden in keinem Modus Beispielorte erzeugt. Sind keine echten Orte vorhanden, zeigt die App einen Empty State mit einer klaren Aktion zum ersten Beitrag. Fällt Supabase aus, wird die letzte lokale Kopie angezeigt; Schreiben ist dann deaktiviert, damit keine nicht synchronisierbaren Änderungen entstehen. Ein freigegebener Nutzerstandort bleibt nur für die aktuelle Browser-Sitzung im Session Storage und wird nie als Nutzertracking an Supabase übertragen. Offensichtliche private Hausnummern werden im Formular und zusätzlich in Postgres blockiert.
 
 ## Bekannte Grenzen
 

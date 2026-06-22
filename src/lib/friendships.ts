@@ -1,7 +1,9 @@
 import { supabase } from './supabase'
 import type { Friendship, Profile } from '../types'
 
-export type FriendProfile = Pick<Profile, 'id' | 'display_name' | 'avatar_url' | 'bio'>
+export type FriendProfile = Pick<Profile, 'id' | 'display_name' | 'avatar_url'> & { bio?: string | null }
+export type FriendActivityKind = 'visit' | 'favorite' | 'photo'
+export type FriendActivity = { id: string; kind: FriendActivityKind; user_id: string; place_id: string; created_at: string }
 
 const requireClient = () => {
   if (!supabase) throw new Error('Freunde sind nur mit Supabase verfügbar.')
@@ -33,6 +35,45 @@ export async function searchProfiles(query: string, ownUserId: string): Promise<
   return (data || []) as FriendProfile[]
 }
 
+export async function loadProfile(profileId: string): Promise<FriendProfile | null> {
+  const { data, error } = await requireClient().from('users').select('id,display_name,avatar_url,bio').eq('id', profileId).maybeSingle()
+  if (error) throw error
+  return data as FriendProfile | null
+}
+
+export async function loadFriendActivity(friendIds: string[]): Promise<FriendActivity[]> {
+  if (!friendIds.length) return []
+  const client = requireClient()
+  const [visits, favorites, photos] = await Promise.all([
+    client.from('visits').select('user_id,place_id,last_visited_at').in('user_id', friendIds).order('last_visited_at', { ascending: false }).limit(40),
+    client.from('favorites').select('user_id,place_id,created_at').in('user_id', friendIds).order('created_at', { ascending: false }).limit(40),
+    client.from('photos').select('id,uploaded_by,place_id,created_at').in('uploaded_by', friendIds).order('created_at', { ascending: false }).limit(40),
+  ])
+  if (visits.error) throw new Error('Besuche deiner Freunde konnten nicht geladen werden.')
+  if (favorites.error) throw new Error('Gespeicherte Orte deiner Freunde benötigen supabase/friend_visit_visibility.sql.')
+  if (photos.error) throw new Error('Community-Fotos konnten nicht geladen werden.')
+  return [
+    ...(visits.data || []).map((item) => ({ id: `visit:${item.user_id}:${item.place_id}`, kind: 'visit' as const, user_id: item.user_id, place_id: item.place_id, created_at: item.last_visited_at })),
+    ...(favorites.data || []).map((item) => ({ id: `favorite:${item.user_id}:${item.place_id}`, kind: 'favorite' as const, user_id: item.user_id, place_id: item.place_id, created_at: item.created_at })),
+    ...(photos.data || []).map((item) => ({ id: `photo:${item.id}`, kind: 'photo' as const, user_id: item.uploaded_by, place_id: item.place_id, created_at: item.created_at })),
+  ].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 60)
+}
+
+export const friendInviteUrl = (origin: string, userId: string) => {
+  const url = new URL('/friends', origin)
+  url.searchParams.set('invite', userId)
+  return url.toString()
+}
+
+export async function shareFriendInvite(url: string) {
+  if (navigator.share) {
+    await navigator.share({ title: 'ExplorerX', text: 'Lass uns gemeinsam echte Orte entdecken.', url })
+    return 'shared' as const
+  }
+  await navigator.clipboard.writeText(url)
+  return 'copied' as const
+}
+
 export async function sendFriendRequest(addresseeId: string) {
   const { data: auth } = await requireClient().auth.getUser()
   if (!auth.user) throw new Error('Bitte zuerst anmelden.')
@@ -41,6 +82,11 @@ export async function sendFriendRequest(addresseeId: string) {
 }
 
 export async function answerFriendRequest(friendshipId: string, status: 'accepted' | 'rejected') {
+  if (status === 'rejected') {
+    const { data, error } = await requireClient().from('friendships').delete().eq('id', friendshipId).select('id').single()
+    if (error || !data) throw new Error('Die Anfrage konnte nicht abgelehnt werden.')
+    return
+  }
   const { data, error } = await requireClient().from('friendships').update({ status, updated_at: new Date().toISOString() }).eq('id', friendshipId).select('id').single()
   if (error || !data) throw new Error('Die Anfrage konnte nicht beantwortet werden.')
 }

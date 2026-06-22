@@ -7,18 +7,18 @@ import { categories, placeFeatures, type Category, type Coordinates, type PlaceF
 import { isPrivateAddress } from '../lib/validation'
 import PlacePhotoUploader, { type PhotoPreview } from '../components/PlacePhotoUploader'
 import CategoryIcon from '../components/CategoryIcon'
+import { useLocationStatus } from '../context/LocationContext'
 
 export default function AddPlacePage() {
   const { addPlace } = usePlaces()
+  const { status: locationStatus, error: sharedLocationError, requestLocation, clearLocationError } = useLocationStatus()
   const navigate = useNavigate()
   const [position, setPosition] = useState<Coordinates | null>(null)
   const [photos, setPhotos] = useState<PhotoPreview[]>([])
   const [features, setFeatures] = useState<Set<PlaceFeature>>(new Set(['Outdoor']))
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
-  const [locating, setLocating] = useState(false)
   const [locationMessage, setLocationMessage] = useState('')
-  const [locationError, setLocationError] = useState('')
   const [uploadStatus, setUploadStatus] = useState('')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -58,28 +58,16 @@ export default function AddPlacePage() {
   const toggleFeature = (feature: PlaceFeature) => setFeatures((current) => { const next = new Set(current); if (next.has(feature)) next.delete(feature); else next.add(feature); return next })
   const pickPosition = (next: Coordinates) => {
     setPosition(next)
-    setLocationError('')
+    clearLocationError()
     setLocationMessage('Position auf der Karte gesetzt.')
   }
-  const useCurrentLocation = () => {
-    setLocationError('')
+  const applyCurrentLocation = async () => {
     setLocationMessage('')
-    if (!navigator.geolocation) {
-      setLocationError('Standortdienste sind in diesem Browser nicht verfügbar. Setze den Ort bitte manuell auf der Karte.')
-      return
-    }
-    setLocating(true)
-    navigator.geolocation.getCurrentPosition((result) => {
-      setPosition({ latitude: result.coords.latitude, longitude: result.coords.longitude })
+    const result = await requestLocation()
+    if (result) {
+      setPosition(result)
       setLocationMessage('Aktueller Standort übernommen. Prüfe die Position vor dem Veröffentlichen.')
-      setLocating(false)
-    }, (locationError) => {
-      const blocked = locationError.code === locationError.PERMISSION_DENIED
-      setLocationError(blocked
-        ? 'Standortzugriff wurde blockiert. Setze den Ort bitte manuell auf der Karte.'
-        : 'Der aktuelle Standort konnte nicht ermittelt werden. Setze den Ort bitte manuell auf der Karte.')
-      setLocating(false)
-    }, { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 })
+    }
   }
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -119,6 +107,7 @@ export default function AddPlacePage() {
       <div className="form-panel">
         <label>Name des Ortes<input name="name" value={name} onChange={(event) => setName(event.target.value)} maxLength={80} placeholder="z.B. Basketballplatz am Fluss" required/></label>
         <fieldset className="category-picker"><legend>Kategorie</legend><input type="hidden" name="category" value={category}/><div>{categories.map((item) => <button type="button" key={item} className={category === item ? 'active' : ''} aria-pressed={category === item} onClick={() => setCategory(item)}><CategoryIcon category={item}/>{item}</button>)}</div></fieldset>
+        {category === 'Schule' && <div className="school-safety-note" role="note"><ShieldCheck/><span><strong>Schule als öffentlicher Ort:</strong> Teile keine privaten Daten, Stundenpläne oder Informationen über einzelne Schüler.</span></div>}
         <label>Beschreibung<textarea name="description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={600} rows={5} placeholder="Was macht diesen Ort besonders? Was kann man dort machen?" required/></label>
         <label>Öffentliche Adresse oder Ortsname<input name="address" value={address} onChange={(event) => setAddress(event.target.value)} maxLength={120} placeholder="z.B. Josefwiese, Zürich"/><small>Keine privaten Hausnummern oder Wohnadressen.</small></label>
         <fieldset className="feature-picker"><legend>Ausstattung und Eigenschaften</legend>{placeFeatures.map((feature) => <label key={feature}><input type="checkbox" checked={features.has(feature)} onChange={() => toggleFeature(feature)}/><span>{feature}</span></label>)}</fieldset>
@@ -131,9 +120,10 @@ export default function AddPlacePage() {
       <div className="map-picker">
         <div className="picker-heading"><div><MapPin size={19}/><strong>Position setzen</strong></div>{position && <span><Check size={15}/> Gesetzt</span>}</div>
         <p>Nutze deinen aktuellen Standort oder markiere den öffentlichen Ort direkt auf der Karte.</p>
-        <button className="picker-location-button" type="button" onClick={useCurrentLocation} disabled={locating || saving}>{locating ? <LoaderCircle className="spin" size={18}/> : <LocateFixed size={18}/>} {locating ? 'Standort wird ermittelt…' : 'Aktuellen Standort verwenden'}</button>
+        <button className="picker-location-button" type="button" onClick={() => void applyCurrentLocation()} disabled={locationStatus === 'asked' || saving}>{locationStatus === 'asked' ? <LoaderCircle className="spin" size={18}/> : <LocateFixed size={18}/>} {locationStatus === 'asked' ? 'Standort wird ermittelt…' : locationStatus === 'allowed' ? 'Aktuellen Standort aktualisieren' : 'Aktuellen Standort verwenden'}</button>
+        <small className="location-privacy">Dein Standort wird nur für diese Position verwendet und nicht als Live-Position gespeichert.</small>
         {locationMessage && <p className="location-success" role="status"><Check size={16}/>{locationMessage}</p>}
-        {locationError && <p className="form-error location-error" role="alert">{locationError}</p>}
+        {sharedLocationError && <p className="form-error location-error" role="alert">{sharedLocationError}</p>}
         <div className="add-card-preview" aria-label="Vorschau der Ortskarte">{photos[0] ? <img src={photos[0].url} alt="Vorschau des Titelbilds"/> : <div><MapPin/><span>Dein Titelbild erscheint hier</span></div>}<section><span><CategoryIcon category={category}/>{category}</span><strong>{name.trim() || 'Name deines Ortes'}</strong><small>{address.trim() || 'Öffentlicher Ort'}</small></section></div>
         <MapView places={[]} picked={position} onPick={pickPosition}/>
         {position && <small>{position.latitude.toFixed(5)}, {position.longitude.toFixed(5)}</small>}

@@ -38,6 +38,8 @@ Der Anon-/Publishable-Key ist für Browser-Apps vorgesehen. Niemals einen `servi
 
 Vor dem Deployment prüfen, dass `supabase/place_rate_limit_update.sql` nach `supabase/admin_hardening.sql` ausgeführt wurde. Der folgende Read-only-Check zeigt die aktive Triggerfunktion und den Trigger:
 
+Für diese Produktphase außerdem nach `supabase/social_places.sql` die Dateien `supabase/add_school_category.sql` und `supabase/friend_visit_visibility.sql` ausführen. Damit funktionieren Schule als Kategorie sowie freundesgeschützte Besuche und gespeicherte Orte im Aktivitätsfeed.
+
 ```sql
 select pg_get_functiondef('private.limit_place_spam()'::regprocedure);
 
@@ -102,6 +104,8 @@ Mit echten Testkonten und echten Supabase-Daten prüfen:
 - Like und Favorit setzen/entfernen
 - Kommentar erstellen, bearbeiten und löschen
 - Freundschaftsanfrage senden, annehmen, ablehnen und entfernen
+- Freund einladen, Invite-Link nach Google Login öffnen und Anfrage ausdrücklich bestätigen
+- Schule erstellen, suchen und auf der Karte filtern
 - „Ich war hier“ setzen/entfernen
 - Ort teilen und Route öffnen
 - Profil bearbeiten und Avatar hochladen

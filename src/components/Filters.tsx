@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type FocusEvent } from 'react'
 import { categories, placeFeatures, type Category, type Place, type PlaceFeature } from '../types'
 import CategoryIcon from './CategoryIcon'
 
-const mainCategories: Category[] = ['Baden', 'Natur', 'Aussicht', 'Sport', 'Essen']
+const mainCategories: Category[] = ['Baden', 'Natur', 'Aussicht', 'Sport', 'Essen', 'Schule']
 const readRecent = () => { try { return JSON.parse(localStorage.getItem('explorerx.recent-searches') || '[]') as string[] } catch { return [] } }
 
 export default function Filters({ query, onQuery, category, onCategory, features, onFeature, places = [], compactCategories = false, placeholder = 'Suche nach Orten, Aktivitäten oder Städten', quickSuggestions = [], onQuickSuggestion }: { query: string; onQuery: (v: string) => void; category: Category | 'Alle'; onCategory: (v: Category | 'Alle') => void; features?: Set<PlaceFeature>; onFeature?: (v: PlaceFeature) => void; places?: Place[]; compactCategories?: boolean; placeholder?: string; quickSuggestions?: Array<{ label: string; value: string }>; onQuickSuggestion?: (value: string) => void }) {
