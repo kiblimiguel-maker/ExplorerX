@@ -44,8 +44,53 @@ export default function DiscoverPage() {
       description="Entdecke echte Orte aus deiner Umgebung – empfohlen von der Community."
       action={<button className="hero-location-button" onClick={locate} disabled={locationStatus === 'asked'}><LocateFixed/> {locationStatus === 'allowed' ? 'Standort aktualisieren' : locationStatus === 'asked' ? 'Standort wird ermittelt…' : 'Standort aktivieren'}</button>}
     />
-    <section className="discover-search-stage"><Filters compactCategories query={query} onQuery={setQuery} category={category} onCategory={setCategory} features={features} onFeature={toggleFeature} places={places} placeholder="Suche nach Orten, Schulen oder Städten…" quickSuggestions={[{ label: 'Trending', value: 'trending' }, { label: 'Sunset Spots', value: 'sunset' }, { label: 'Badestellen', value: 'baden' }, { label: 'Schulen', value: 'schule' }]} onQuickSuggestion={(value) => { setQuery(''); setFeatures(value === 'sunset' ? new Set(['Sonnenuntergang']) : new Set()); setCategory(value === 'baden' ? 'Baden' : value === 'schule' ? 'Schule' : value === 'aussicht' || value === 'sunset' ? 'Aussicht' : 'Alle') }}/></section>
-    <p className={`status-note discovery-status location-status-${locationStatus}`}><LocateFixed/>{locationStatus === 'allowed' ? 'Dein Standort wird nur verwendet, um Distanzen und Orte in deiner Nähe zu zeigen.' : locationError || 'Freiwillig: ExplorerX speichert deine Live-Position nicht in Supabase.'}</p>
-    {isLoading ? <div className="discovery-loading discovery-loading-premium" role="status"><span/><span/><span/></div> : results.length ? <div className="discovery-sections discovery-sections-premium">{sections.map((section) => <section className={`discovery-section discovery-product-section discovery-tone-${section.tone}`} key={section.title}><div className="discovery-heading"><div><span>{section.icon}</span><div><h2>{section.title}</h2><p>{section.subtitle}</p></div></div><small>{section.places.length ? `${section.places.length} Orte` : 'Noch keine Treffer'}</small></div>{section.places.length ? <div className="discovery-cards discovery-product-rail">{section.places.map((place, index) => <PlaceCard key={place.id} place={place} featured={index === 0} userLocation={location} onLike={() => toggleLike(place.id)}/>)}</div> : <PremiumEmptyState compact icon={section.icon} title={section.title === 'In deiner Nähe' ? 'Standort noch nicht aktiv' : 'Hier gibt es noch nichts Echtes zu zeigen'} description={section.title === 'In deiner Nähe' ? 'Aktiviere deinen Standort, damit ExplorerX reale Distanzen berechnen kann.' : 'Sobald passende Community-Orte vorhanden sind, erscheinen sie hier.'} action={section.title === 'In deiner Nähe' ? <button className="secondary-button" onClick={locate}><LocateFixed/> Standort aktivieren</button> : undefined}/>}</section>)}</div> : <PremiumEmptyState icon={<Compass/>} title="Für diese Suche gibt es noch keine Orte" description="Passe Suche oder Filter an. ExplorerX erzeugt keine künstlichen Einträge." action={<button className="secondary-button" onClick={() => { setQuery(''); setCategory('Alle'); setFeatures(new Set()) }}>Suche zurücksetzen</button>}/>} 
+
+    <section className="discover-search-stage">
+      <Filters
+        compactCategories
+        query={query}
+        onQuery={setQuery}
+        category={category}
+        onCategory={setCategory}
+        features={features}
+        onFeature={toggleFeature}
+        places={places}
+        placeholder="Suche nach Orten, Schulen oder Städten…"
+        quickSuggestions={[{ label: 'Trending', value: 'trending' }, { label: 'Sunset Spots', value: 'sunset' }, { label: 'Badestellen', value: 'baden' }, { label: 'Schulen', value: 'schule' }]}
+        onQuickSuggestion={(value) => {
+          setQuery('')
+          setFeatures(value === 'sunset' ? new Set(['Sonnenuntergang']) : new Set())
+          setCategory(value === 'baden' ? 'Baden' : value === 'schule' ? 'Schule' : value === 'aussicht' || value === 'sunset' ? 'Aussicht' : 'Alle')
+        }}
+      />
+    </section>
+
+    <p className={`status-note discovery-status location-status-${locationStatus}`}>
+      <LocateFixed/>
+      {locationStatus === 'allowed' ? 'Dein Standort wird nur verwendet, um Distanzen und Orte in deiner Nähe zu zeigen.' : locationError || 'Freiwillig: ExplorerX speichert deine Live-Position nicht in Supabase.'}
+    </p>
+
+    {isLoading ? <div className="discovery-loading discovery-loading-premium" role="status"><span/><span/><span/></div> : results.length ? <div className="discovery-sections discovery-sections-premium">
+      {sections.map((section) => <section className={`discovery-section discovery-product-section discovery-tone-${section.tone}`} key={section.title}>
+        <div className="discovery-heading">
+          <div><span>{section.icon}</span><div><h2>{section.title}</h2><p>{section.subtitle}</p></div></div>
+          <small>{section.places.length ? `${section.places.length} Orte` : 'Noch keine Treffer'}</small>
+        </div>
+        {section.places.length ? <div className="discovery-cards discovery-product-rail">
+          {section.places.map((place) => <PlaceCard key={place.id} place={place} userLocation={location} onLike={() => toggleLike(place.id)}/>)}
+        </div> : <PremiumEmptyState
+          compact
+          icon={section.icon}
+          title={section.title === 'In deiner Nähe' ? 'Standort noch nicht aktiv' : 'Hier gibt es noch nichts Echtes zu zeigen'}
+          description={section.title === 'In deiner Nähe' ? 'Aktiviere deinen Standort, damit ExplorerX reale Distanzen berechnen kann.' : 'Sobald passende Community-Orte vorhanden sind, erscheinen sie hier.'}
+          action={section.title === 'In deiner Nähe' ? <button className="secondary-button" onClick={locate}><LocateFixed/> Standort aktivieren</button> : undefined}
+        />}
+      </section>)}
+    </div> : <PremiumEmptyState
+      icon={<Compass/>}
+      title="Für diese Suche gibt es noch keine Orte"
+      description="Passe Suche oder Filter an. ExplorerX erzeugt keine künstlichen Einträge."
+      action={<button className="secondary-button" onClick={() => { setQuery(''); setCategory('Alle'); setFeatures(new Set()) }}>Suche zurücksetzen</button>}
+    />}
   </div>
 }
