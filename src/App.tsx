@@ -41,9 +41,11 @@ const links = [
 ]
 
 export default function App() {
+  const location = useLocation()
   const { notice, clearNotice, dataMode } = usePlaces()
   const { message, clearMessage, user, isAdmin } = useSocial()
-  return <div className="app-shell">
+  const isMapRoute = location.pathname === '/map'
+  return <div className={`app-shell ${isMapRoute ? 'app-shell-map' : ''}`}>
     <header className="topbar">
       <NavLink className="brand" to="/"><img className="brand-icon" src="/icons/icon-192.png" alt=""/><strong>Explorer<span>X</span></strong><span className="tagline">Rausgehen. Neues entdecken.</span></NavLink>
       <nav className="desktop-nav">{links.map(({ to, label, icon: Icon }) => <NavLink to={to} key={to}><Icon size={19}/>{label}</NavLink>)}</nav>
