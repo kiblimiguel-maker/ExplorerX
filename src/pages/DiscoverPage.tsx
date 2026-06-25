@@ -3,7 +3,6 @@ import { useDeferredValue, useMemo, useState, type ReactNode } from 'react'
 import Filters from '../components/Filters'
 import PlaceCard from '../components/PlaceCard'
 import PremiumEmptyState from '../components/PremiumEmptyState'
-import ProductHero from '../components/ProductHero'
 import { usePlaces } from '../context/PlacesContext'
 import { useLocationStatus } from '../context/LocationContext'
 import { distanceKm, placeScore } from '../lib/geo'
@@ -21,29 +20,31 @@ export default function DiscoverPage() {
   const sections = useMemo<DiscoverySection[]>(() => {
     const used = new Set<string>()
     const take = (items: Place[], count: number) => {
-      const unique = items.filter((place) => !used.has(place.id)).slice(0, count)
-      const selected = unique.length ? unique : results.length <= 8 ? items.slice(0, Math.min(2, count)) : []
+      const selected = items.filter((place) => !used.has(place.id)).slice(0, count)
       selected.forEach((place) => used.add(place.id))
       return selected
     }
     return [
-      { title: 'Trending', subtitle: 'Was die Community diese Woche bewegt.', icon: <Flame/>, places: take([...results].sort((a, b) => b.likes_count + (b.comments_count || 0) * 2 + (b.favorites_count || 0) - (a.likes_count + (a.comments_count || 0) * 2 + (a.favorites_count || 0))), 3), tone: 'hot' },
-      { title: 'In deiner Nähe', subtitle: 'Nach deiner aktuellen Distanz sortiert.', icon: <LocateFixed/>, places: location ? take([...results].sort((a, b) => distanceKm(location, a) - distanceKm(location, b)), 3) : [], tone: 'near' },
-      { title: 'Aussicht', subtitle: 'Orte, bei denen sich der Blick lohnt.', icon: <Mountain/>, places: take(results.filter((place) => place.category === 'Aussicht'), 3), tone: 'personal' },
-      { title: 'Hidden Gems', subtitle: 'Weniger bekannt, aber voller echter Perspektiven.', icon: <Sparkles/>, places: take([...results].sort((a, b) => a.likes_count - b.likes_count || (b.photos_count || 0) - (a.photos_count || 0)), 3), tone: 'gem' },
-      { title: 'Neu entdeckt', subtitle: 'Frisch von der ExplorerX Community veröffentlicht.', icon: <Clock3/>, places: take([...results].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)), 3), tone: 'new' },
+      { title: 'Trending', subtitle: 'Orte, über die gerade gesprochen wird.', icon: <Flame/>, places: take([...results].sort((a, b) => b.likes_count + (b.comments_count || 0) * 2 + (b.favorites_count || 0) - (a.likes_count + (a.comments_count || 0) * 2 + (a.favorites_count || 0))), 6), tone: 'hot' },
+      { title: 'In deiner Nähe', subtitle: 'Nach deiner aktuellen Distanz sortiert.', icon: <LocateFixed/>, places: location ? take([...results].sort((a, b) => distanceKm(location, a) - distanceKm(location, b)), 6) : [], tone: 'near' },
+      { title: 'Baden', subtitle: 'Badestellen und Orte am Wasser.', icon: <Sparkles/>, places: take(results.filter((place) => place.category === 'Baden'), 6), tone: 'water' },
+      { title: 'Natur', subtitle: 'Ruhige Orte draussen.', icon: <Sparkles/>, places: take(results.filter((place) => place.category === 'Natur'), 6), tone: 'nature' },
+      { title: 'Schulen', subtitle: 'Öffentliche Orte rund um Schulen.', icon: <Mountain/>, places: take(results.filter((place) => place.category === 'Schule'), 6), tone: 'school' },
+      { title: 'Sunset Spots', subtitle: 'Orte für spätes Licht und Aussicht.', icon: <Mountain/>, places: take(results.filter((place) => place.features?.includes('Sonnenuntergang')), 6), tone: 'sunset' },
+      { title: 'Neu entdeckt', subtitle: 'Frisch von der Community veröffentlicht.', icon: <Clock3/>, places: take([...results].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)), 6), tone: 'new' },
     ]
   }, [location, results])
   const toggleFeature = (feature: PlaceFeature) => setFeatures((current) => { const next = new Set(current); if (next.has(feature)) next.delete(feature); else next.add(feature); return next })
   const locate = () => { void requestLocation() }
 
   return <div className="content-page discover-page discover-product-page social-product-page">
-    <ProductHero
-      className="discover-product-hero"
-      title="Wohin zieht es dich heute?"
-      description="Entdecke echte Orte aus deiner Umgebung – empfohlen von der Community."
-      action={<button className="hero-location-button" onClick={locate} disabled={locationStatus === 'asked'}><LocateFixed/> {locationStatus === 'allowed' ? 'Standort aktualisieren' : locationStatus === 'asked' ? 'Standort wird ermittelt…' : 'Standort aktivieren'}</button>}
-    />
+    <header className="discover-ios-intro">
+      <div>
+        <h1>Wohin zieht es dich heute?</h1>
+        <p>Entdecke echte Orte, empfohlen von deiner Community.</p>
+      </div>
+      <button className="hero-location-button" onClick={locate} disabled={locationStatus === 'asked'}><LocateFixed/> {locationStatus === 'allowed' ? 'Aktualisieren' : locationStatus === 'asked' ? 'Sucht…' : 'Standort'}</button>
+    </header>
 
     <section className="discover-search-stage">
       <Filters

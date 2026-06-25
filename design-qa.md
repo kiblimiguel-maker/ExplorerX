@@ -1,46 +1,50 @@
-# ExplorerX Live Community Pass
+# ExplorerX Mobile Product Design QA
 
-- Source visual truth: Browser annotation on `https://explorer-x-five.vercel.app/discover`, Comment 1, selected `.discover-search-stage`.
-- Implementation screenshot: `/Users/migueldavidkubli/Documents/Codex/2026-06-18/ExplorerX/outputs/ExplorerX/design-qa-artifacts/discover-desktop-final.png`
-- Mobile screenshot: `/Users/migueldavidkubli/Documents/Codex/2026-06-18/ExplorerX/outputs/ExplorerX/design-qa-artifacts/discover-mobile-final.png`
-- Viewports: 1440 x 900 desktop and 390 x 844 mobile.
-- State: real Supabase places loaded, default Discover filters, dark theme.
+- Source visual truth path: `/var/folders/f6/8gbwqf353vn_gy7rv0ct0ltc0000gn/T/codex-clipboard-d65548fa-8fe0-43b5-b08c-db93700a0b95.png`
+- Implementation screenshots:
+  - `/tmp/explorerx-mobile-discover-390.png`
+  - `/tmp/explorerx-mobile-map-390.png`
+- Viewport: 390 x 844.
+- State: local ExplorerX, dark theme, real Supabase-backed places loaded where available, logged-out profile route correctly redirects to login.
 
 **Full-View Comparison**
 
-The live reference used a 383 px hero and a 321 px search/filter stage. The implementation reduces these to 263 px and 225 px. Real place photography now enters the viewport earlier, while navigation, search, quick suggestions, categories and advanced filters remain available. Desktop and mobile have no horizontal page overflow.
+The source shows a native-feeling iOS outdoor discovery app: compact brand header, short Discover intro, strong search, circular category controls, image-first rails, a full-screen map with a rounded bottom sheet, and a Strava-like profile with real photography. The implementation now follows that structure on mobile: Discover removes the oversized hero, Map presents a three-state bottom sheet, cards are photo-first, and the bottom navigation is a calmer native tab bar.
 
 **Focused Region Comparison**
 
-The selected search/filter region keeps the existing information architecture but changes the category area from a large multi-row control board to six primary horizontal pills. Search remains prominent, `Command/Ctrl + K` is now functional, quick searches remain directly accessible, and secondary filters stay collapsed. A separate crop was unnecessary because the entire selected region is readable in both implementation screenshots.
+Focused regions reviewed: Discover header/search/category/card area and Map bottom sheet. Discover now keeps the first place title below the image, has no clipped location text, and avoids the previous dashboard-style filter block. Map keeps the map visible behind a rounded, draggable-style sheet. A logged-in Profile screenshot could not be captured because the local browser was logged out; the profile implementation was checked through source and build, and the route correctly enforces auth.
 
 **Required Fidelity Surfaces**
 
-- Typography: Manrope hierarchy is preserved; hero and section titles are smaller and wrap cleanly at 390 px.
-- Spacing and layout: the hero, search dock and section rhythm are materially tighter without reducing touch targets below 44 px.
-- Colors and tokens: the requested navy, slate and lime system is applied with restrained borders and shadows.
-- Image quality: existing real Supabase images remain uncropped beyond `object-fit: cover`, lazy loading remains active, and cards use a legibility overlay.
-- Copy and content: all visible places, counts and community signals come from existing data. No example content was introduced.
+- Typography: system Apple-style stack is preserved, large titles are reduced to mobile-friendly sizes, and place card titles use tighter optical weights and line heights.
+- Spacing and layout rhythm: mobile uses 16 px page margins, rounded 18-24 px surfaces, reduced hero height, and horizontal rails. No horizontal overflow was detected at 390 px.
+- Colors and visual tokens: dark base `#090c12`, slate surfaces, restrained borders, and ExplorerX green `#a8e85a` are applied without neon glow or heavy glass effects.
+- Image quality and asset fidelity: no fake photos or generated assets were added. Place cards and profile cover use existing real place/user imagery when available.
+- Copy and content: sections use real data only. Empty sections remain honest; no fake places, comments, likes, ratings, or friends were introduced.
 
 **Findings**
 
-- No actionable P0, P1 or P2 mismatch remains in the selected region.
-- P3: quick-search labels intentionally clip into horizontal scrolling on narrow phones to preserve readable touch targets.
+- No actionable P0, P1, or P2 findings remain for the reviewed mobile Discover and Map states.
+- P3: the logged-in Profile screen still needs a live authenticated visual pass after the user signs in locally, because auth protection correctly prevented direct inspection.
 
-**Patches Made**
+**Patches Made Since Previous QA**
 
-- Reduced hero and filter-stage prominence.
-- Added compact primary categories and a working keyboard search shortcut.
-- Simplified primary navigation and made the mobile add action central.
-- Reduced card metadata to real community signals.
-- Added responsive checks at desktop and mobile sizes.
+- Rebuilt Discover into a compact mobile discovery feed with independent real-data sections.
+- Added Map sheet states: collapsed, half, expanded.
+- Added real-data profile cover image selection from user photos, visited places, or created places.
+- Added final iOS polish layer for navigation, buttons, cards, search, map, detail, profile, friends, favorites, trending, add-place, and auth surfaces.
+- Removed the mobile privacy status line from Discover to bring real photos higher into the viewport.
 
 **Implementation Checklist**
 
-- [x] Desktop layout and overflow
-- [x] Mobile layout and overflow
-- [x] Search, categories and advanced filter interaction
-- [x] Real-data-only content
-- [x] Keyboard and visible-focus behavior
+- [x] Mobile Discover visual structure.
+- [x] Mobile Map bottom sheet.
+- [x] Place card image-first treatment.
+- [x] Native-feeling bottom navigation.
+- [x] Real-data-only content.
+- [x] No horizontal overflow at 390 px.
+- [x] Console error check for Discover and Map.
+- [x] `npm test`, `npm run lint`, and `npm run build`.
 
 final result: passed
