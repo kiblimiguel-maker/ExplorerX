@@ -1,14 +1,32 @@
 import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 
 const GALLERY_PAGE_SIZE = 24
 
-export default function PlaceGallery({ images, name }: { images: string[]; name: string }) {
+export default function PlaceGallery({ images, name, placeId }: { images: string[]; name: string; placeId?: string }) {
   const [index, setIndex] = useState(0)
   const [fullscreen, setFullscreen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(GALLERY_PAGE_SIZE)
+  const touchStartX = useRef<number | null>(null)
+  const lightboxRef = useRef<HTMLDivElement | null>(null)
   const safeIndex = Math.min(index, Math.max(0, images.length - 1))
   const active = images[safeIndex]
+  const transitionName = placeId ? `place-image-${placeId.replace(/[^a-zA-Z0-9_-]/g, '-')}` : undefined
+  const activeImageStyle = transitionName ? { viewTransitionName: transitionName } as CSSProperties : undefined
+
+  useEffect(() => {
+    if (!fullscreen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.setTimeout(() => lightboxRef.current?.focus(), 0)
+    return () => { document.body.style.overflow = previousOverflow }
+  }, [fullscreen])
+
+  useEffect(() => {
+    if (!active || images.length < 2) return
+    const preload = new Image()
+    preload.src = images[(safeIndex + 1) % images.length]
+  }, [active, images, safeIndex])
 
   if (!active) {
     return (
@@ -26,12 +44,26 @@ export default function PlaceGallery({ images, name }: { images: string[]; name:
     setIndex((current) => (current + step + images.length) % images.length)
   }
 
-  const activeImage = (
+  const onPointerDown = (event: PointerEvent) => {
+    if (images.length < 2 || event.pointerType === 'mouse') return
+    touchStartX.current = event.clientX
+  }
+
+  const onPointerUp = (event: PointerEvent) => {
+    if (touchStartX.current === null) return
+    const delta = event.clientX - touchStartX.current
+    touchStartX.current = null
+    if (Math.abs(delta) < 42) return
+    move(delta > 0 ? -1 : 1)
+  }
+
+  const renderActiveImage = (style?: CSSProperties) => (
     <img
       src={active}
       alt={`${name}, Bild ${safeIndex + 1} von ${images.length}`}
       decoding="async"
       fetchPriority={safeIndex === 0 ? 'high' : 'auto'}
+      style={style}
     />
   )
 
@@ -42,8 +74,8 @@ export default function PlaceGallery({ images, name }: { images: string[]; name:
 
   return (
     <div className="gallery-column">
-      <div className="detail-photo place-gallery">
-        {activeImage}
+      <div className="detail-photo place-gallery" onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
+        {renderActiveImage(activeImageStyle)}
         <button
           type="button"
           className="gallery-expand"
@@ -114,11 +146,25 @@ export default function PlaceGallery({ images, name }: { images: string[]; name:
       )}
 
       {fullscreen && (
-        <div className="gallery-lightbox" role="dialog" aria-modal="true" aria-label={`${name} Galerie`}>
+        <div
+          className="gallery-lightbox"
+          ref={lightboxRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${name} Galerie`}
+          tabIndex={-1}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setFullscreen(false)
+            if (event.key === 'ArrowLeft') move(-1)
+            if (event.key === 'ArrowRight') move(1)
+          }}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+        >
           <button type="button" onClick={() => setFullscreen(false)} aria-label="Vollbild schliessen">
             <X />
           </button>
-          {activeImage}
+          {renderActiveImage()}
           {images.length > 1 && (
             <div className="lightbox-controls">
               <button type="button" onClick={() => move(-1)} aria-label="Vorheriges Bild"><ChevronLeft /></button>

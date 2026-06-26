@@ -1795,6 +1795,87 @@ button:disabled,
   overflow-wrap:anywhere;
 }
 
+/* Interaction quality layer: app-like motion without changing workflows. */
+@supports (view-transition-name:none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration:.32s;
+    animation-timing-function:cubic-bezier(.2,.86,.22,1);
+  }
+
+  ::view-transition-group(*) {
+    animation-duration:.42s;
+    animation-timing-function:cubic-bezier(.2,.86,.22,1);
+  }
+}
+
+.place-image-wrap {
+  will-change:transform;
+}
+
+.place-card:active {
+  transform:translateY(0) scale(.992);
+}
+
+.place-card-tools button:active,
+.detail-actions button:active,
+.detail-actions a:active,
+.mobile-nav a:active,
+.gallery-arrow:active,
+.gallery-expand:active {
+  transform:scale(.96);
+}
+
+.place-gallery {
+  touch-action:pan-y;
+}
+
+.place-gallery>img,
+.gallery-lightbox>img {
+  user-select:none;
+  -webkit-user-drag:none;
+}
+
+.gallery-lightbox:focus {
+  outline:none;
+}
+
+.gallery-lightbox {
+  animation:galleryLightboxIn .22s cubic-bezier(.2,.86,.22,1);
+}
+
+@keyframes galleryLightboxIn {
+  from { opacity:0; transform:scale(.985); }
+  to { opacity:1; transform:scale(1); }
+}
+
+@media (max-width:780px) {
+  .map-sidebar-product .sheet-handle {
+    cursor:grab;
+    touch-action:none;
+  }
+
+  .map-sidebar-product.sheet-dragging {
+    transition:none!important;
+    transform:translateY(var(--sheet-drag-offset,0));
+  }
+
+  .map-sidebar-product.sheet-dragging .sheet-handle {
+    cursor:grabbing;
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .place-image-wrap,
+  .detail-photo img {
+    view-transition-name:none!important;
+  }
+
+  .gallery-lightbox {
+    animation:none;
+  }
+}
+
 .form-panel,
 .map-picker,
 .profile-main,

@@ -81,7 +81,7 @@ export default function PlaceDetailPage() {
   return <div className="detail-page">
     <Link className="back-link" to="/map"><ArrowLeft size={18}/> Zurück zur Karte</Link>
     <section className="detail-hero">
-      <PlaceGallery images={galleryImages} name={place.name}/>
+      <PlaceGallery images={galleryImages} name={place.name} placeId={place.id}/>
       <div className="detail-info">
         <span className={`category category-${place.category.toLowerCase()}`}><CategoryIcon category={place.category}/>{place.category}</span>
         <h1>{place.name}</h1>
