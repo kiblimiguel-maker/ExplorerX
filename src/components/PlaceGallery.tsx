@@ -45,6 +45,7 @@ export default function PlaceGallery({ images, name }: { images: string[]; name:
       <div className="detail-photo place-gallery">
         {activeImage}
         <button
+          type="button"
           className="gallery-expand"
           onClick={() => setFullscreen(true)}
           aria-label="Galerie im Vollbild öffnen"
@@ -54,16 +55,17 @@ export default function PlaceGallery({ images, name }: { images: string[]; name:
 
         {images.length > 1 && (
           <>
-            <button className="gallery-arrow previous" onClick={() => move(-1)} aria-label="Vorheriges Bild">
+            <button type="button" className="gallery-arrow previous" onClick={() => move(-1)} aria-label="Vorheriges Bild">
               <ChevronLeft />
             </button>
-            <button className="gallery-arrow next" onClick={() => move(1)} aria-label="Nächstes Bild">
+            <button type="button" className="gallery-arrow next" onClick={() => move(1)} aria-label="Nächstes Bild">
               <ChevronRight />
             </button>
             <span className="gallery-count">{safeIndex + 1} / {images.length}</span>
             <div className="gallery-thumbnails">
               {images.slice(0, 12).map((url, itemIndex) => (
                 <button
+                  type="button"
                   className={itemIndex === safeIndex ? 'active' : ''}
                   key={`${url}-${itemIndex}`}
                   onClick={() => setIndex(itemIndex)}
@@ -113,15 +115,15 @@ export default function PlaceGallery({ images, name }: { images: string[]; name:
 
       {fullscreen && (
         <div className="gallery-lightbox" role="dialog" aria-modal="true" aria-label={`${name} Galerie`}>
-          <button onClick={() => setFullscreen(false)} aria-label="Vollbild schliessen">
+          <button type="button" onClick={() => setFullscreen(false)} aria-label="Vollbild schliessen">
             <X />
           </button>
           {activeImage}
           {images.length > 1 && (
             <div className="lightbox-controls">
-              <button onClick={() => move(-1)} aria-label="Vorheriges Bild"><ChevronLeft /></button>
+              <button type="button" onClick={() => move(-1)} aria-label="Vorheriges Bild"><ChevronLeft /></button>
               <span>{safeIndex + 1} / {images.length}</span>
-              <button onClick={() => move(1)} aria-label="Nächstes Bild"><ChevronRight /></button>
+              <button type="button" onClick={() => move(1)} aria-label="Nächstes Bild"><ChevronRight /></button>
             </div>
           )}
         </div>

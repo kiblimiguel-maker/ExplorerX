@@ -48,7 +48,7 @@ export default function App() {
   return <div className={`app-shell ${isMapRoute ? 'app-shell-map' : ''}`}>
     <header className="topbar">
       <NavLink className="brand" to="/"><img className="brand-icon" src="/icons/icon-192.png" alt=""/><strong>Explorer<span>X</span></strong><span className="tagline">Rausgehen. Neues entdecken.</span></NavLink>
-      <nav className="desktop-nav">{links.map(({ to, label, icon: Icon }) => <NavLink to={to} key={to}><Icon size={19}/>{label}</NavLink>)}</nav>
+      <nav className="desktop-nav" aria-label="Hauptnavigation">{links.map(({ to, label, icon: Icon }) => <NavLink to={to} key={to}><Icon size={19}/>{label}</NavLink>)}</nav>
       <NavLink className="primary-button compact" to="/add"><Plus size={18}/> Ort hinzufügen</NavLink>
       {isAdmin && <NavLink className="profile-link profile-link-labeled admin-link" to="/admin"><ShieldCheck size={19}/><span>Admin</span></NavLink>}
       <NavLink className="profile-link profile-link-labeled" to={user ? '/profile' : '/login'}><UserRound size={19}/><span>{user ? 'Profil' : 'Anmelden'}</span></NavLink>
@@ -74,6 +74,6 @@ export default function App() {
       <Route path="*" element={<NotFoundPage />} />
     </Routes></Suspense></main>
     <Onboarding/>
-    <nav className="mobile-nav"><NavLink to="/discover"><Compass size={21}/><span>Entdecken</span></NavLink><NavLink to="/map"><Map size={21}/><span>Karte</span></NavLink><NavLink className="mobile-add-action" to="/add"><Plus size={22}/><span>Hinzufügen</span></NavLink><NavLink to="/friends"><Bell size={21}/><span>Freunde</span></NavLink><NavLink to={user ? '/profile' : '/login'}><UserRound size={21}/><span>Profil</span></NavLink></nav>
+    <nav className="mobile-nav" aria-label="Mobile Hauptnavigation"><NavLink to="/discover"><Compass size={21}/><span>Entdecken</span></NavLink><NavLink to="/map"><Map size={21}/><span>Karte</span></NavLink><NavLink className="mobile-add-action" to="/add"><Plus size={22}/><span>Hinzufügen</span></NavLink><NavLink to="/friends"><Bell size={21}/><span>Freunde</span></NavLink><NavLink to={user ? '/profile' : '/login'}><UserRound size={21}/><span>Profil</span></NavLink></nav>
   </div>
 }

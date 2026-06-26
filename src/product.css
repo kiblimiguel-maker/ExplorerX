@@ -1109,3 +1109,1094 @@ body { background:var(--bg); color:#f8fafc; overflow-x:hidden; }
     min-height:78px;
   }
 }
+
+/* Premium mobile product pass inspired by the Stitch wireframe.
+   This layer only refines layout and chrome; data and behavior stay in React. */
+:root {
+  --premium-bg:#080d14;
+  --premium-surface:#0f1621;
+  --premium-surface-raised:#141d2a;
+  --premium-hairline:rgba(226,237,248,.085);
+  --premium-hairline-strong:rgba(226,237,248,.14);
+  --premium-text:#f7fafc;
+  --premium-muted:#a8b4c2;
+  --premium-muted-2:#7f8b99;
+  --premium-green:#a8e85a;
+  --premium-blue:#83b7e8;
+  --premium-coral:#ff9b70;
+}
+
+html {
+  background:var(--premium-bg);
+}
+
+body {
+  background:var(--premium-bg);
+  color:var(--premium-text);
+  text-rendering:optimizeLegibility;
+}
+
+.app-shell {
+  background:
+    linear-gradient(180deg,rgba(131,183,232,.075),transparent 360px),
+    var(--premium-bg);
+}
+
+.topbar {
+  border-bottom:1px solid var(--premium-hairline);
+}
+
+.brand strong,
+.product-hero h1,
+.discover-ios-intro h1,
+.detail-info h1,
+.profile-identity h1,
+.page-title h1 {
+  color:var(--premium-text);
+}
+
+.brand-icon,
+.place-image-wrap,
+.podium-media,
+.profile-photo-grid a,
+.profile-place-rail a,
+.add-card-preview {
+  background:#111925;
+}
+
+.primary-button,
+.hero-location-button,
+.mobile-nav .mobile-add-action,
+.primary-categories button.active,
+.discover-search-stage .primary-categories button.active,
+.collection-categories button.active,
+.trend-category-pills button.active,
+.category-picker button.active,
+.feature-picker input:checked+span {
+  color:#101807;
+  background:var(--premium-green);
+}
+
+.secondary-button,
+.profile-section-tabs a,
+.search-box,
+.collection-search,
+.friend-search-live,
+.form-panel input,
+.form-panel select,
+.form-panel textarea {
+  border-color:var(--premium-hairline);
+}
+
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.mobile-nav a:focus-visible,
+.search-box:focus-within,
+.collection-search:focus-within,
+.friend-search-live:focus-within,
+.form-panel input:focus,
+.form-panel select:focus,
+.form-panel textarea:focus,
+.category-picker button:focus-visible,
+.feature-picker input:focus-visible+span {
+  outline:3px solid rgba(131,183,232,.42);
+  outline-offset:3px;
+}
+
+.place-card,
+.podium-card,
+.friend-profile-card,
+.person-card-premium,
+.request-card,
+.form-panel,
+.map-picker,
+.auth-card,
+.auth-card-wide,
+.premium-empty,
+.profile-stats,
+.add-progress,
+.privacy-warning {
+  border-color:var(--premium-hairline);
+}
+
+.place-card-tools .favorite-button,
+.card-tool-button,
+.selection-close,
+.icon-button,
+.search-clear,
+.onboarding-close {
+  min-width:44px;
+  min-height:44px;
+}
+
+.place-card-tools .favorite-button,
+.card-tool-button {
+  display:grid;
+  place-items:center;
+}
+
+.place-card-tools .favorite-button.saved,
+.favorite-button.saved,
+.secondary-button.saved,
+.visit-button.visited {
+  color:#101807;
+  border-color:transparent;
+  background:var(--premium-green);
+}
+
+.like-button,
+.like-count {
+  min-height:38px;
+  border-radius:999px;
+}
+
+.quick-searches button,
+.discover-search-stage .quick-searches button {
+  min-height:44px;
+}
+
+.sheet-handle {
+  min-height:44px;
+}
+
+.map-sidebar-product .sheet-handle {
+  min-height:44px;
+}
+
+.rail-heading a {
+  min-width:44px;
+  min-height:36px;
+  display:inline-flex;
+  align-items:center;
+}
+
+.place-card-body > a {
+  display:block;
+}
+
+.map-sidebar .place-card-body > a {
+  min-height:36px;
+}
+
+.like-button:focus-visible {
+  outline:3px solid rgba(255,155,112,.32);
+  outline-offset:2px;
+}
+
+.detail-community-strip,
+.trend-score-grid,
+.card-social-stats,
+.profile-stats {
+  color:#dbe4ee;
+}
+
+.detail-community-strip svg,
+.trend-score-grid svg,
+.card-social-stats svg {
+  color:var(--premium-muted);
+}
+
+.map-canvas,
+.map,
+.leaflet-container {
+  background:#07111d;
+}
+
+.leaflet-control-zoom a {
+  color:#f7fafc!important;
+  background:#111925!important;
+  border-color:var(--premium-hairline)!important;
+}
+
+@media (min-width:781px) {
+  .mobile-nav {
+    display:none;
+  }
+
+  .content-page,
+  .social-product-page,
+  .detail-page,
+  .add-page {
+    width:min(100%, 1280px);
+  }
+
+  .discovery-product-rail .place-card,
+  .saved-places-grid .place-card {
+    min-width:0;
+  }
+
+  .discovery-product-rail .place-image-wrap {
+    aspect-ratio:1.12;
+  }
+
+  .map-selection-product {
+    width:min(380px, calc(100% - 44px));
+  }
+}
+
+@media (max-width:780px) {
+  body {
+    background:var(--premium-bg);
+  }
+
+  .topbar {
+    height:68px;
+    padding:8px 16px 6px;
+  }
+
+  .brand {
+    min-width:0;
+  }
+
+  .brand strong {
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .profile-link {
+    min-width:44px;
+    height:44px;
+    border-radius:15px;
+    background:rgba(255,255,255,.045);
+  }
+
+  .mobile-nav {
+    left:12px;
+    right:12px;
+    bottom:max(10px, env(safe-area-inset-bottom));
+    height:70px;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    padding:7px;
+    border:1px solid var(--premium-hairline);
+    border-radius:22px;
+    background:rgba(10,15,22,.94);
+    box-shadow:0 18px 44px rgba(0,0,0,.5);
+    backdrop-filter:blur(16px) saturate(1.08);
+  }
+
+  .mobile-nav a {
+    min-width:0;
+    min-height:54px;
+    border-radius:15px;
+    color:#98a5b5;
+    font-size:10px;
+    font-weight:750;
+  }
+
+  .mobile-nav a.active {
+    color:var(--premium-green);
+    background:rgba(168,232,90,.08);
+  }
+
+  .mobile-nav .mobile-add-action {
+    width:54px;
+    min-width:54px;
+    height:54px;
+    box-shadow:0 12px 28px rgba(168,232,90,.18);
+  }
+
+  .section,
+  .content-page,
+  .add-page,
+  .detail-page {
+    padding-right:16px;
+    padding-left:16px;
+  }
+
+  .discover-ios-intro {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 44px;
+    gap:14px;
+    align-items:start;
+  }
+
+  .discover-ios-intro h1 {
+    max-width:300px;
+    font-size:30px;
+  }
+
+  .discover-search-stage {
+    top:64px;
+    margin-inline:-16px;
+    padding:8px 16px 14px;
+  }
+
+  .quick-searches {
+    gap:16px;
+  }
+
+  .quick-searches button,
+  .discover-search-stage .quick-searches button {
+    min-width:max-content;
+    min-height:44px;
+    color:#b6c1cf;
+    font-size:12px;
+  }
+
+  .primary-categories button,
+  .discover-search-stage .primary-categories button {
+    min-width:68px;
+    min-height:62px;
+    border:1px solid var(--premium-hairline);
+    background:#111925;
+  }
+
+  .discovery-product-rail .place-card,
+  .discovery-product-rail .place-card:first-child,
+  .discovery-product-rail .place-card:last-child {
+    flex-basis:44vw;
+    max-width:190px;
+  }
+
+  .discovery-product-rail .place-image-wrap,
+  .discovery-product-rail .place-card:first-child .place-image-wrap {
+    border-radius:17px;
+    box-shadow:0 12px 28px rgba(0,0,0,.26);
+  }
+
+  .discovery-product-rail .place-card-tools {
+    top:6px;
+    right:6px;
+  }
+
+  .discovery-product-rail .place-card-tools .card-tool-button {
+    display:none;
+  }
+
+  .discovery-product-rail .place-card-tools .favorite-button {
+    width:44px;
+    height:44px;
+    border-radius:50%;
+  }
+
+  .discovery-product-rail .place-card h3 {
+    min-height:34px;
+  }
+
+  .map-page {
+    --mobile-nav-height:70px;
+    --map-sheet-gap:14px;
+    --map-sheet-collapsed-height:108px;
+    --map-sheet-half-height:min(40dvh, 350px);
+  }
+
+  .app-shell-map main {
+    height:calc(100dvh - 68px);
+  }
+
+  .map-sidebar.map-sidebar-product {
+    border-radius:24px;
+    background:rgba(12,18,27,.95);
+    box-shadow:0 20px 52px rgba(0,0,0,.52);
+    backdrop-filter:blur(14px) saturate(1.06);
+  }
+
+  .map-sidebar .search-box {
+    min-height:54px;
+    border-radius:18px;
+  }
+
+  .map-sidebar .primary-categories button {
+    min-height:62px;
+  }
+
+  .map-sidebar .place-card,
+  .map-sidebar .place-card-featured,
+  .map-sidebar-product .rail-cards .place-card-featured,
+  .map-sidebar-product .rail-featured .place-card-featured {
+    border-radius:18px;
+    background:rgba(255,255,255,.04);
+  }
+
+  .map-selection-product {
+    right:max(10px, env(safe-area-inset-right));
+    left:max(10px, env(safe-area-inset-left));
+    bottom:calc(var(--map-sheet-bottom) + var(--map-sheet-current-height) + 10px);
+    width:auto;
+    max-height:34dvh;
+    overflow:hidden;
+  }
+
+  .map-selection-product .place-card {
+    display:grid;
+    grid-template-columns:96px minmax(0,1fr);
+    gap:12px;
+    padding:10px;
+    border-radius:20px;
+  }
+
+  .map-selection-product .place-image-wrap {
+    width:96px;
+    height:84px;
+    min-height:84px;
+    border-radius:16px;
+  }
+
+  .map-selection-product .place-card-body {
+    min-width:0;
+    padding:0 34px 0 0;
+  }
+
+  .map-selection-product .card-community,
+  .map-selection-product .card-social-stats,
+  .map-selection-product .card-friend-visits {
+    display:none;
+  }
+
+  .detail-actions {
+    bottom:calc(86px + env(safe-area-inset-bottom));
+  }
+
+  .detail-actions .primary-button,
+  .detail-actions .secondary-button,
+  .detail-actions .route-links a,
+  .detail-actions .route-links button {
+    min-height:46px;
+    border-radius:14px;
+    white-space:nowrap;
+  }
+
+  .detail-community-strip {
+    display:grid;
+    grid-auto-columns:minmax(74px,1fr);
+    grid-auto-flow:column;
+    overflow-x:auto;
+    margin-inline:-16px;
+    padding-inline:16px;
+    scrollbar-width:none;
+  }
+
+  .detail-community-strip::-webkit-scrollbar {
+    display:none;
+  }
+
+  .profile-stats {
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+
+  .profile-stats>div {
+    min-width:0;
+  }
+
+  .profile-stats span {
+    overflow-wrap:anywhere;
+  }
+
+  .collection-toolbar,
+  .trending-controls {
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+
+  .collection-categories,
+  .trend-category-pills,
+  .profile-section-tabs,
+  .friends-tabs {
+    margin-right:-16px;
+    padding-right:16px;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+
+  .collection-categories::-webkit-scrollbar,
+  .trend-category-pills::-webkit-scrollbar,
+  .profile-section-tabs::-webkit-scrollbar,
+  .friends-tabs::-webkit-scrollbar {
+    display:none;
+  }
+}
+
+@media (max-width:380px) {
+  .discovery-product-rail .place-card,
+  .discovery-product-rail .place-card:first-child,
+  .discovery-product-rail .place-card:last-child {
+    flex-basis:46vw;
+  }
+
+  .map-selection-product {
+    display:none;
+  }
+
+  .mobile-nav {
+    left:8px;
+    right:8px;
+  }
+}
+
+/* Cross-surface implementation pass: keeps the Stitch-inspired mobile shell,
+   but applies only production UI improvements to existing ExplorerX surfaces. */
+:root {
+  --control-height:44px;
+  --control-height-lg:54px;
+  --tap-target:44px;
+  --page-gutter:clamp(18px,4vw,56px);
+  --panel-radius:22px;
+  --media-radius:22px;
+  --focus-ring:rgba(131,183,232,.46);
+}
+
+main {
+  min-width:0;
+}
+
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline:3px solid var(--focus-ring);
+  outline-offset:3px;
+}
+
+button:disabled,
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor:not-allowed;
+  opacity:.58;
+  transform:none;
+}
+
+.desktop-nav a,
+.profile-link,
+.topbar .primary-button.compact,
+.primary-button,
+.secondary-button,
+.hero-location-button,
+.google-login-button,
+.picker-location-button,
+.friend-profile-actions button,
+.request-actions button,
+.profile-quick-links a {
+  min-height:var(--control-height);
+}
+
+.place-card {
+  contain:layout paint;
+}
+
+.place-card a,
+.profile-place-rail a,
+.profile-photo-grid a {
+  text-decoration:none;
+}
+
+.place-card-body > a:focus-visible,
+.profile-place-rail a:focus-visible,
+.profile-photo-grid a:focus-visible {
+  border-radius:12px;
+}
+
+.place-card h3,
+.trend-row-copy strong,
+.friend-profile-copy strong,
+.person-card-copy strong,
+.profile-place-rail strong {
+  overflow-wrap:anywhere;
+}
+
+.place-image-wrap {
+  isolation:isolate;
+}
+
+.place-image-fallback {
+  inset:0;
+  display:grid;
+  place-items:center;
+  gap:6px;
+  text-align:center;
+}
+
+.share-control {
+  display:inline-flex;
+}
+
+.detail-info {
+  min-width:0;
+}
+
+.detail-actions {
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.detail-actions .share-control,
+.detail-actions .route-links {
+  display:flex;
+}
+
+.detail-actions .route-links a,
+.detail-actions .route-links button {
+  min-height:var(--control-height);
+}
+
+.detail-community-strip>span {
+  min-width:0;
+}
+
+.detail-community-strip strong,
+.profile-stats strong {
+  font-variant-numeric:tabular-nums;
+}
+
+.detail-community-people {
+  min-width:0;
+}
+
+.gallery-expand,
+.gallery-arrow,
+.gallery-thumbnails button,
+.gallery-lightbox>button,
+.lightbox-controls button,
+.gallery-grid button,
+.gallery-more,
+.comment-actions button,
+.comment-edit button,
+.preview-close,
+.report-button {
+  min-width:var(--tap-target);
+  min-height:var(--tap-target);
+}
+
+.gallery-grid button,
+.gallery-thumbnails button {
+  overflow:hidden;
+  border:1px solid transparent;
+}
+
+.gallery-grid button:focus-visible,
+.gallery-thumbnails button:focus-visible {
+  border-color:var(--premium-blue);
+}
+
+.comments-panel {
+  max-width:100%;
+}
+
+.comment-form {
+  grid-template-columns:auto minmax(0,1fr) auto;
+}
+
+.comment-form textarea,
+.comment-edit textarea,
+.profile-form input,
+.profile-form textarea {
+  color:var(--premium-text);
+}
+
+.comment {
+  min-width:0;
+}
+
+.comment>div {
+  min-width:0;
+}
+
+.comment p {
+  overflow-wrap:anywhere;
+}
+
+.form-panel,
+.map-picker,
+.profile-main,
+.achievements-panel,
+.friend-profile-card,
+.person-card-premium,
+.request-card {
+  border:1px solid var(--premium-hairline);
+}
+
+.form-panel label,
+.profile-form label {
+  color:#d8e2ed;
+}
+
+.form-panel input,
+.form-panel textarea,
+.profile-form input,
+.profile-form textarea,
+.friend-search-live input {
+  min-height:var(--control-height-lg);
+  font-size:15px;
+}
+
+.form-panel textarea,
+.profile-form textarea {
+  line-height:1.5;
+}
+
+.feature-picker,
+.category-picker {
+  min-width:0;
+}
+
+.feature-picker label {
+  min-width:0;
+}
+
+.feature-picker span,
+.category-picker button {
+  min-height:var(--tap-target);
+}
+
+.photo-picker {
+  text-align:center;
+}
+
+.photo-previews {
+  grid-template-columns:repeat(auto-fill,minmax(96px,1fr));
+}
+
+.photo-preview {
+  aspect-ratio:1;
+}
+
+.photo-preview img,
+.add-card-preview img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.map-picker .map {
+  min-height:360px;
+}
+
+.add-card-preview {
+  min-height:168px;
+}
+
+.profile-grid {
+  align-items:start;
+}
+
+.profile-form,
+.achievements-panel,
+.profile-main {
+  min-width:0;
+}
+
+.profile-identity p,
+.profile-empty-copy {
+  overflow-wrap:anywhere;
+}
+
+.profile-actions,
+.profile-quick-links {
+  flex-wrap:wrap;
+}
+
+.profile-section-tabs a {
+  white-space:nowrap;
+}
+
+.profile-place-rail,
+.profile-photo-grid {
+  content-visibility:auto;
+  contain-intrinsic-size:480px;
+}
+
+.profile-place-rail a {
+  min-width:0;
+}
+
+.profile-place-rail img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.friends-tabs button {
+  white-space:nowrap;
+}
+
+.friend-profile-card,
+.person-card-premium,
+.request-card {
+  min-width:0;
+}
+
+.friend-profile-actions,
+.request-actions,
+.empty-actions {
+  flex-wrap:wrap;
+}
+
+.activity-feed-list article {
+  min-width:0;
+}
+
+.activity-feed-list article>div {
+  min-width:0;
+}
+
+.activity-feed-list a {
+  overflow-wrap:anywhere;
+}
+
+.profile-preview-backdrop {
+  padding:16px;
+}
+
+.profile-preview-card {
+  width:min(100%,440px);
+  max-height:min(720px,calc(100dvh - 32px));
+  overflow:auto;
+}
+
+@media (min-width:781px) {
+  .detail-hero {
+    grid-template-columns:minmax(0,1.05fr) minmax(380px,.95fr);
+  }
+
+  .place-gallery>img,
+  .detail-photo img {
+    max-height:min(720px,calc(100vh - 150px));
+  }
+
+  .add-layout {
+    align-items:start;
+  }
+
+  .map-picker {
+    position:sticky;
+    top:92px;
+  }
+
+  .profile-grid {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(300px,360px);
+  }
+}
+
+@media (max-width:780px) {
+  :root {
+    --panel-radius:20px;
+    --media-radius:18px;
+  }
+
+  .desktop-nav {
+    display:none;
+  }
+
+  .content-page,
+  .social-product-page,
+  .detail-page,
+  .add-page {
+    max-width:100%;
+  }
+
+  .mobile-nav {
+    padding-bottom:max(7px, env(safe-area-inset-bottom));
+  }
+
+  .mobile-nav a svg {
+    flex:0 0 auto;
+  }
+
+  .place-card:hover {
+    transform:none;
+  }
+
+  .place-card-tools .favorite-button,
+  .card-tool-button {
+    box-shadow:0 8px 18px rgba(0,0,0,.3);
+  }
+
+  .detail-actions {
+    gap:8px;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .detail-actions::-webkit-scrollbar {
+    display:none;
+  }
+
+  .detail-actions .share-control,
+  .detail-actions .route-links {
+    flex:0 0 auto;
+  }
+
+  .detail-actions .primary-button,
+  .detail-actions .secondary-button,
+  .detail-actions .route-links a,
+  .detail-actions .route-links button {
+    padding-inline:14px;
+  }
+
+  .detail-community-strip>span {
+    min-width:74px;
+  }
+
+  .detail-community-people {
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .comments-panel {
+    margin-inline:-16px;
+    padding:22px 16px;
+    border-radius:0;
+  }
+
+  .comment-form {
+    grid-template-columns:auto minmax(0,1fr);
+  }
+
+  .comment-form .icon-button {
+    grid-column:2;
+    justify-self:end;
+  }
+
+  .comment {
+    grid-template-columns:auto minmax(0,1fr);
+  }
+
+  .comment-actions {
+    grid-column:2;
+    justify-self:start;
+  }
+
+  .gallery-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .add-page .page-title {
+    margin-bottom:16px;
+  }
+
+  .add-progress,
+  .privacy-warning {
+    margin-inline:0;
+  }
+
+  .add-layout {
+    gap:16px;
+  }
+
+  .form-panel {
+    order:1;
+  }
+
+  .map-picker {
+    order:2;
+  }
+
+  .form-panel,
+  .map-picker,
+  .profile-main,
+  .achievements-panel {
+    padding:18px;
+  }
+
+  .map-picker .map {
+    height:340px;
+    min-height:340px;
+  }
+
+  .add-card-preview {
+    min-height:150px;
+  }
+
+  .photo-previews {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .profile-actions .secondary-button,
+  .profile-form .primary-button,
+  .submit-button,
+  .picker-location-button {
+    width:100%;
+  }
+
+  .profile-section-tabs a,
+  .friends-tabs button {
+    flex:0 0 auto;
+  }
+
+  .profile-place-rail {
+    display:flex;
+    gap:12px;
+    margin-inline:-16px;
+    padding:0 16px 4px;
+    overflow-x:auto;
+    scroll-snap-type:x proximity;
+    scrollbar-width:none;
+  }
+
+  .profile-place-rail::-webkit-scrollbar {
+    display:none;
+  }
+
+  .profile-place-rail a {
+    flex:0 0 168px;
+    scroll-snap-align:start;
+  }
+
+  .profile-photo-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .friends-tabs {
+    gap:14px;
+  }
+
+  .friends-tabs button {
+    min-height:50px;
+  }
+
+  .friend-profile-card,
+  .person-card-premium,
+  .request-card {
+    padding:16px;
+  }
+
+  .friend-profile-actions button,
+  .request-actions button,
+  .empty-actions .primary-button,
+  .empty-actions .secondary-button {
+    flex:1 1 150px;
+  }
+
+  .friend-search-live {
+    grid-template-columns:auto minmax(0,1fr) auto;
+  }
+
+  .profile-preview-backdrop {
+    align-items:flex-end;
+  }
+
+  .profile-preview-card {
+    width:100%;
+    max-height:min(620px,calc(100dvh - 96px));
+    border-radius:24px 24px 0 0;
+  }
+}
+
+@media (max-width:420px) {
+  .mobile-nav a span {
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .detail-info h1,
+  .profile-identity h1,
+  .add-page .page-title h1 {
+    overflow-wrap:anywhere;
+  }
+
+  .detail-community-strip {
+    grid-auto-columns:minmax(70px,1fr);
+  }
+
+  .photo-previews {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .friend-search-live {
+    padding-inline:12px;
+  }
+}
