@@ -1,4 +1,4 @@
-import { Check, LocateFixed, LoaderCircle, MapPin, ShieldCheck, Upload } from 'lucide-react'
+import { Camera, Check, LocateFixed, LoaderCircle, MapPin, ShieldCheck, Upload } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MapView from '../components/MapView'
@@ -127,7 +127,10 @@ export default function AddPlacePage() {
         <small className="location-privacy">Dein Standort wird nur für diese Position verwendet und nicht als Live-Position gespeichert.</small>
         {locationMessage && <p className="location-success" role="status"><Check size={16}/>{locationMessage}</p>}
         {sharedLocationError && <p className="form-error location-error" role="alert">{sharedLocationError}</p>}
-        <div className="add-card-preview" aria-label="Vorschau der Ortskarte">{photos[0] ? <img src={photos[0].url} alt="Vorschau des Titelbilds"/> : <div><MapPin/><span>Dein Titelbild erscheint hier</span></div>}<section><span><CategoryIcon category={category}/>{category}</span><strong>{name.trim() || 'Name deines Ortes'}</strong><small>{address.trim() || 'Öffentlicher Ort'}</small></section></div>
+        <div className={`add-card-preview ${photos[0] ? 'has-photo' : 'is-empty'}`} aria-label="Vorschau der Ortskarte">
+          {photos[0] ? <img src={photos[0].url} alt="Vorschau des Titelbilds"/> : <div className="add-card-placeholder"><span><Camera size={22}/></span><strong>Titelbild hinzufügen</strong><small>Wähle links ein echtes Foto aus. Es erscheint hier als Ortskarte.</small></div>}
+          <section><span><CategoryIcon category={category}/>{category}</span><strong>{name.trim() || 'Name deines Ortes'}</strong><small>{address.trim() || 'Öffentlicher Ort'}</small></section>
+        </div>
         <MapView places={[]} picked={position} onPick={pickPosition}/>
         {position && <small>{position.latitude.toFixed(5)}, {position.longitude.toFixed(5)}</small>}
       </div>
