@@ -43,7 +43,7 @@ const links = [
 export default function App() {
   const location = useLocation()
   const { notice, clearNotice, dataMode } = usePlaces()
-  const { message, clearMessage, user, isAdmin } = useSocial()
+  const { message, clearMessage, user, isAdmin, xpFeedback } = useSocial()
   const isMapRoute = location.pathname === '/map'
   return <div className={`app-shell ${isMapRoute ? 'app-shell-map' : ''}`}>
     <header className="topbar">
@@ -57,6 +57,7 @@ export default function App() {
     {dataMode === 'offline' && <div className="mode-banner mode-banner-error" role="alert"><strong>Offline-Modus:</strong> Supabase ist nicht erreichbar. ExplorerX zeigt die letzte lokale Kopie.</div>}
     {notice && <div className={`notice-bar notice-${notice.type}`} role="status"><span>{notice.message}</span><button onClick={clearNotice} aria-label="Hinweis schliessen"><X size={17}/></button></div>}
     {message && <div className="notice-bar notice-info" role="status"><span>{message}</span><button onClick={clearMessage} aria-label="Hinweis schliessen"><X size={17}/></button></div>}
+    {xpFeedback && <div className="xp-feedback" role="status" key={xpFeedback.id}><strong>+{xpFeedback.points} XP</strong><span>{xpFeedback.label}</span></div>}
     <main><Suspense fallback={<PageSkeleton/>}><Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/discover" element={<DiscoverPage />} />

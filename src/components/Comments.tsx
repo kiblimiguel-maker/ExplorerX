@@ -17,7 +17,7 @@ const relativeTime = (value: string) => {
 }
 
 export default function Comments({ placeId, onCountChange }: { placeId: string; onCountChange?: (delta: number) => void }) {
-  const { user, profile } = useSocial()
+  const { user, profile, recordProgress } = useSocial()
   const [comments, setComments] = useState<Comment[]>([])
   const [body, setBody] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -45,7 +45,7 @@ export default function Comments({ placeId, onCountChange }: { placeId: string; 
     if (supabase && user) {
       const { data, error: insertError } = await supabase.from('comments').insert({ place_id: placeId, user_id: user.id, body: value }).select('*, author:users(display_name, avatar_url)').single()
       if (insertError) setError(insertError.message.includes('rate') ? 'Zu viele Kommentare. Bitte warte kurz.' : 'Kommentar konnte nicht gespeichert werden.')
-      else { setComments((current) => [data as Comment, ...current]); setBody(''); onCountChange?.(1) }
+      else { setComments((current) => [data as Comment, ...current]); setBody(''); onCountChange?.(1); recordProgress({ comments: 1, xp: 3 }, 3, 'Kommentar geschrieben') }
     } else {
       const comment: Comment = { id: crypto.randomUUID(), place_id: placeId, user_id: 'local-user', body: value, created_at: new Date().toISOString(), edited_at: null, author: { display_name: 'Du (lokal)', avatar_url: null } }
       const next = [comment, ...comments]; setComments(next); localStorage.setItem(demoKey(placeId), JSON.stringify(next)); setBody(''); onCountChange?.(1)

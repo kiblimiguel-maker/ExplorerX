@@ -37,8 +37,18 @@ export type Profile = {
   created_at: string
 }
 
-export type ProfileStats = { places: number; likesReceived: number; visited: number }
-export type Achievement = { id: string; title: string; description: string; unlocked: boolean }
+export type ProfileStats = {
+  places: number
+  likesReceived: number
+  visited: number
+  photos: number
+  comments: number
+  favorites: number
+  xp: number
+  badenActivity: number
+  schoolActivity: number
+}
+export type Achievement = { id: string; title: string; description: string; unlocked: boolean; progress: number; target: number }
 export type Comment = {
   id: string
   place_id: string

@@ -8,9 +8,11 @@ import { isPrivateAddress } from '../lib/validation'
 import PlacePhotoUploader, { type PhotoPreview } from '../components/PlacePhotoUploader'
 import CategoryIcon from '../components/CategoryIcon'
 import { useLocationStatus } from '../context/LocationContext'
+import { useOptionalSocial } from '../context/SocialContext'
 
 export default function AddPlacePage() {
   const { addPlace } = usePlaces()
+  const social = useOptionalSocial()
   const { status: locationStatus, error: sharedLocationError, requestLocation, clearLocationError } = useLocationStatus()
   const navigate = useNavigate()
   const [position, setPosition] = useState<Coordinates | null>(null)
@@ -86,6 +88,7 @@ export default function AddPlacePage() {
     setUploadStatus(photos.length ? `0 von ${photos.length} Fotos hochgeladen` : 'Ort wird gespeichert…')
     try {
       const place = await addPlace({ name: nextName, description: nextDescription, category, address: nextAddress || undefined, latitude: position.latitude, longitude: position.longitude, photos: photos.map((item) => item.file), features: [...features] }, (uploaded, total) => setUploadStatus(`${uploaded} von ${total} Fotos hochgeladen`))
+      social?.recordProgress({ places: 1, xp: 20, badenActivity: category === 'Baden' ? 1 : 0, schoolActivity: category === 'Schule' ? 1 : 0 }, 20, 'Ort hinzugefügt')
       navigate(`/places/${place.id}`)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Der Ort konnte gerade nicht gespeichert werden. Bitte versuche es erneut.')

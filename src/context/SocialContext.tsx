@@ -12,6 +12,7 @@ type SocialContextValue = {
   profile: Profile | null
   stats: ProfileStats
   achievements: Achievement[]
+  xpFeedback: { id: number; points: number; label: string } | null
   favoriteIds: Set<string>
   visitedIds: Set<string>
   friendVisitCounts: Map<string, number>
@@ -20,6 +21,8 @@ type SocialContextValue = {
   isLoading: boolean
   message: string
   clearMessage: () => void
+  showXpFeedback: (points: number, label: string) => void
+  recordProgress: (delta: Partial<Pick<ProfileStats, 'places' | 'photos' | 'comments' | 'xp' | 'badenActivity' | 'schoolActivity'>>, points?: number, label?: string) => void
   toggleFavorite: (placeId: string) => Promise<void>
   toggleVisit: (placeId: string) => Promise<void>
   updateProfile: (displayName: string, bio: string, avatar?: File) => Promise<void>
@@ -27,7 +30,7 @@ type SocialContextValue = {
 }
 
 const SocialContext = createContext<SocialContextValue | null>(null)
-const EMPTY_STATS = { places: 0, likesReceived: 0, visited: 0 }
+const EMPTY_STATS: ProfileStats = { places: 0, likesReceived: 0, visited: 0, photos: 0, comments: 0, favorites: 0, xp: 0, badenActivity: 0, schoolActivity: 0 }
 const readDemoFavorites = () => {
   try { return new Set<string>(JSON.parse(localStorage.getItem('explorerx.favorites.v2') || '[]')) } catch { return new Set<string>() }
 }
@@ -47,6 +50,26 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(Boolean(supabase))
   const [message, setMessage] = useState('')
+  const [xpFeedback, setXpFeedback] = useState<SocialContextValue['xpFeedback']>(null)
+
+  const showXpFeedback = useCallback((points: number, label: string) => {
+    if (points <= 0) return
+    const id = Date.now()
+    setXpFeedback({ id, points, label })
+    window.setTimeout(() => setXpFeedback((current) => current?.id === id ? null : current), 2400)
+  }, [])
+  const recordProgress = useCallback((delta: Partial<Pick<ProfileStats, 'places' | 'photos' | 'comments' | 'xp' | 'badenActivity' | 'schoolActivity'>>, points = 0, label = '') => {
+    setStats((current) => ({
+      ...current,
+      places: Math.max(0, current.places + (delta.places || 0)),
+      photos: Math.max(0, current.photos + (delta.photos || 0)),
+      comments: Math.max(0, current.comments + (delta.comments || 0)),
+      xp: Math.max(0, current.xp + (delta.xp || 0)),
+      badenActivity: Math.max(0, current.badenActivity + (delta.badenActivity || 0)),
+      schoolActivity: Math.max(0, current.schoolActivity + (delta.schoolActivity || 0)),
+    }))
+    if (points && label) showXpFeedback(points, label)
+  }, [showXpFeedback])
 
   const loadAccount = useCallback(async (nextUser: User | null) => {
     setUser(nextUser)
@@ -58,13 +81,16 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
       return
     }
-    const [profileResult, favoritesResult, placesResult, visitsResult, friendVisitsResult, adminResult] = await Promise.all([
+    const [profileResult, favoritesResult, placesResult, visitsResult, friendVisitsResult, adminResult, photosResult, commentsResult, xpResult] = await Promise.all([
       supabase.from('users').select('*').eq('id', nextUser.id).maybeSingle(),
       supabase.from('favorites').select('place_id').eq('user_id', nextUser.id),
-      supabase.from('places').select('likes_count').eq('created_by', nextUser.id),
+      supabase.from('places').select('id,likes_count,category').eq('created_by', nextUser.id),
       supabase.from('visits').select('place_id').eq('user_id', nextUser.id),
       supabase.from('visits').select('place_id,user_id').neq('user_id', nextUser.id),
       supabase.from('admin_users').select('user_id').eq('user_id', nextUser.id).maybeSingle(),
+      supabase.from('photos').select('id', { count: 'exact', head: true }).eq('uploaded_by', nextUser.id),
+      supabase.from('comments').select('id', { count: 'exact', head: true }).eq('user_id', nextUser.id),
+      supabase.from('explorer_xp_events').select('xp').eq('user_id', nextUser.id),
     ])
     let nextProfile = profileResult.data ? profileResult.data as Profile : null
     try {
@@ -89,8 +115,28 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       if (visitor) nextVisitors.set(visit.place_id, [...(nextVisitors.get(visit.place_id) || []), visitor])
     }
     setFriendVisitorsByPlace(nextVisitors)
-    const ownPlaces = placesResult.data || []
-    setStats({ places: ownPlaces.length, likesReceived: ownPlaces.reduce((sum, item) => sum + item.likes_count, 0), visited: visitsResult.data?.length || 0 })
+    const ownPlaces = (placesResult.data || []) as Array<{ id: string; likes_count: number; category?: string | null }>
+    const favoritePlaceIds = (favoritesResult.data || []).map((item) => item.place_id)
+    const visitedPlaceIds = (visitsResult.data || []).map((item) => item.place_id)
+    const categoryPlaceIds = [...new Set([...ownPlaces.map((place) => place.id), ...favoritePlaceIds, ...visitedPlaceIds])]
+    const categoryResult = categoryPlaceIds.length
+      ? await supabase.from('places').select('id,category').in('id', categoryPlaceIds)
+      : { data: [] as Array<{ id: string; category: string }> }
+    const categoryCounts = new Map<string, number>()
+    for (const place of categoryResult.data || []) categoryCounts.set(place.category, (categoryCounts.get(place.category) || 0) + 1)
+    const derivedXp = ownPlaces.length * 20 + (photosResult.count || 0) * 8 + (visitsResult.data?.length || 0) * 5 + (commentsResult.count || 0) * 3 + favoritePlaceIds.length
+    const ledgerXp = xpResult.error ? 0 : (xpResult.data || []).reduce((sum, item) => sum + item.xp, 0)
+    setStats({
+      places: ownPlaces.length,
+      likesReceived: ownPlaces.reduce((sum, item) => sum + item.likes_count, 0),
+      visited: visitsResult.data?.length || 0,
+      photos: photosResult.count || 0,
+      comments: commentsResult.count || 0,
+      favorites: favoritePlaceIds.length,
+      xp: ledgerXp || derivedXp,
+      badenActivity: categoryCounts.get('Baden') || 0,
+      schoolActivity: categoryCounts.get('Schule') || 0,
+    })
     setIsAdmin(Boolean(adminResult.data && !adminResult.error))
     setIsLoading(false)
   }, [])
@@ -119,8 +165,14 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       : await supabase.from('favorites').insert({ user_id: user.id, place_id: placeId })
     if (result.error) { setMessage('Favoriten benötigen das ExplorerX-v2-Datenbankschema.'); return }
     setFavoriteIds((current) => { const next = new Set(current); if (saved) next.delete(placeId); else next.add(placeId); return next })
+    if (!saved) {
+      setStats((current) => ({ ...current, favorites: current.favorites + 1, xp: current.xp + 1 }))
+      showXpFeedback(1, 'Favorit gespeichert')
+    } else {
+      setStats((current) => ({ ...current, favorites: Math.max(0, current.favorites - 1) }))
+    }
     placesContext?.adjustSocialCount(placeId, 'favorites_count', saved ? -1 : 1)
-  }, [favoriteIds, placesContext, user])
+  }, [favoriteIds, placesContext, showXpFeedback, user])
 
   const toggleVisit = useCallback(async (placeId: string) => {
     const visited = visitedIds.has(placeId)
@@ -136,10 +188,11 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       : await supabase.from('visits').insert({ user_id: user.id, place_id: placeId })
     if (result.error) { setMessage('„War hier“ benötigt supabase/social_places.sql.'); return }
     setVisitedIds((current) => { const next = new Set(current); if (visited) next.delete(placeId); else next.add(placeId); return next })
-    setStats((current) => ({ ...current, visited: Math.max(0, current.visited + (visited ? -1 : 1)) }))
+    setStats((current) => ({ ...current, visited: Math.max(0, current.visited + (visited ? -1 : 1)), xp: current.xp + (visited ? 0 : 5) }))
     placesContext?.adjustSocialCount(placeId, 'visits_count', visited ? -1 : 1)
+    if (!visited) showXpFeedback(5, 'Besuch markiert')
     setMessage(visited ? 'Besuch entfernt.' : 'Als besucht markiert.')
-  }, [placesContext, user, visitedIds])
+  }, [placesContext, showXpFeedback, user, visitedIds])
 
   const updateProfile = useCallback(async (displayName: string, bio: string, avatar?: File) => {
     if (!supabase || !user) throw new Error('Bitte zuerst anmelden.')
@@ -165,7 +218,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     await loadAccount(null)
   }, [loadAccount])
 
-  const value = useMemo(() => ({ user, profile, stats, achievements, favoriteIds, visitedIds, friendVisitCounts, friendVisitorsByPlace, isAdmin, isLoading, message, clearMessage: () => setMessage(''), toggleFavorite, toggleVisit, updateProfile, signOut }), [achievements, favoriteIds, friendVisitCounts, friendVisitorsByPlace, isAdmin, isLoading, message, profile, signOut, stats, toggleFavorite, toggleVisit, updateProfile, user, visitedIds])
+  const value = useMemo(() => ({ user, profile, stats, achievements, xpFeedback, favoriteIds, visitedIds, friendVisitCounts, friendVisitorsByPlace, isAdmin, isLoading, message, clearMessage: () => setMessage(''), showXpFeedback, recordProgress, toggleFavorite, toggleVisit, updateProfile, signOut }), [achievements, favoriteIds, friendVisitCounts, friendVisitorsByPlace, isAdmin, isLoading, message, profile, recordProgress, showXpFeedback, signOut, stats, toggleFavorite, toggleVisit, updateProfile, user, visitedIds, xpFeedback])
   return <SocialContext.Provider value={value}>{children}</SocialContext.Provider>
 }
 
@@ -173,4 +226,8 @@ export function useSocial() {
   const value = useContext(SocialContext)
   if (!value) throw new Error('useSocial must be used within SocialProvider')
   return value
+}
+
+export function useOptionalSocial() {
+  return useContext(SocialContext)
 }

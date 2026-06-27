@@ -21,7 +21,7 @@ import UserAvatar from '../components/UserAvatar'
 export default function PlaceDetailPage() {
   const { id } = useParams()
   const { places, likedIds, toggleLike, reportPlace, setPlacePhotoCover, adjustSocialCount, isLoading } = usePlaces()
-  const { user, favoriteIds, visitedIds, toggleFavorite, toggleVisit } = useSocial()
+  const { user, favoriteIds, visitedIds, toggleFavorite, toggleVisit, recordProgress } = useSocial()
   const navigate = useNavigate()
   const place = places.find((item) => item.id === id)
   const [reported, setReported] = useState(false)
@@ -57,12 +57,14 @@ export default function PlaceDetailPage() {
   const uploadedPhotos = (newPhotos: CommunityPhoto[]) => {
     setPhotos((current) => [...current, ...newPhotos])
     adjustSocialCount(place.id, 'photos_count', newPhotos.length)
+    recordProgress({ photos: newPhotos.length, xp: newPhotos.length * 8 }, newPhotos.length * 8, newPhotos.length === 1 ? 'Foto hochgeladen' : 'Fotos hochgeladen')
     if (!place.image_url && newPhotos[0]) setPlacePhotoCover(place.id, newPhotos[0].url)
   }
   const deletedPhoto = (photo: CommunityPhoto) => {
     const remaining = photos.filter((item) => item.id !== photo.id)
     setPhotos(remaining)
     adjustSocialCount(place.id, 'photos_count', -1)
+    recordProgress({ photos: -1 })
     if (place.image_url === photo.url) setPlacePhotoCover(place.id, remaining[0]?.url)
   }
   const report = async () => {
