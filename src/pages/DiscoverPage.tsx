@@ -34,6 +34,8 @@ export default function DiscoverPage() {
       { title: 'Neu entdeckt', subtitle: 'Frisch von der Community veröffentlicht.', icon: <Clock3/>, places: take([...results].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)), 6), tone: 'new' },
     ]
   }, [location, results])
+  const showNearbyPrompt = !location && category === 'Alle' && features.size === 0 && !deferredQuery.trim()
+  const visibleSections = useMemo(() => sections.filter((section) => section.places.length || (section.title === 'In deiner Nähe' && showNearbyPrompt)), [sections, showNearbyPrompt])
   const toggleFeature = (feature: PlaceFeature) => setFeatures((current) => { const next = new Set(current); if (next.has(feature)) next.delete(feature); else next.add(feature); return next })
   const locate = () => { void requestLocation() }
 
@@ -72,7 +74,7 @@ export default function DiscoverPage() {
     </p>
 
     {isLoading ? <div className="discovery-loading discovery-loading-premium" role="status"><span/><span/><span/></div> : results.length ? <div className="discovery-sections discovery-sections-premium">
-      {sections.map((section) => <section className={`discovery-section discovery-product-section discovery-tone-${section.tone}`} key={section.title}>
+      {visibleSections.map((section) => <section className={`discovery-section discovery-product-section discovery-tone-${section.tone}`} key={section.title}>
         <div className="discovery-heading">
           <div><span>{section.icon}</span><div><h2>{section.title}</h2><p>{section.subtitle}</p></div></div>
           <small>{section.places.length ? `${section.places.length} Orte` : 'Noch keine Treffer'}</small>

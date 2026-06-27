@@ -1,5 +1,5 @@
-import { Award, Bookmark, Camera, Footprints, Image, LogOut, MapPin, MessageCircle, Save, ShieldCheck, Sparkles, Star, UserRound, UsersRound } from 'lucide-react'
-import { useEffect, useState, type FormEvent } from 'react'
+import { Award, Bookmark, Camera, Footprints, Image, LoaderCircle, LogOut, MapPin, MessageCircle, Save, ShieldCheck, Sparkles, Star, UserRound, UsersRound } from 'lucide-react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSocial } from '../context/SocialContext'
 import { usePlaces } from '../context/PlacesContext'
@@ -16,18 +16,20 @@ export default function ProfilePage() {
 }
 
 function LoadedProfilePage() {
-  const { user, profile, stats, achievements, favoriteIds, visitedIds, isAdmin, updateProfile, signOut } = useSocial()
+  const { user, profile, stats, achievements, favoriteIds, visitedIds, isAdmin, updateProfile, uploadProfileAvatar, signOut } = useSocial()
   const { places } = usePlaces()
   const navigate = useNavigate()
   const [name, setName] = useState(() => profile?.display_name || '')
   const [bio, setBio] = useState(() => profile?.bio || '')
-  const [avatar, setAvatar] = useState<File>()
-  const [preview, setPreview] = useState('')
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const [avatarPreview, setAvatarPreview] = useState('')
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarStatus, setAvatarStatus] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [friendCount, setFriendCount] = useState(0)
   const [ownPhotos, setOwnPhotos] = useState<Array<{ id: string; placeId: string; url: string }>>([])
-  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
+  useEffect(() => () => { if (avatarPreview) URL.revokeObjectURL(avatarPreview) }, [avatarPreview])
   useEffect(() => {
     const client = supabase
     if (!user || !client) return
@@ -46,14 +48,38 @@ function LoadedProfilePage() {
   const unlocked = achievements.filter((achievement) => achievement.unlocked)
   const level = levelForXp(stats.xp)
   const levelProgress = Math.round((level.progress / level.target) * 100)
-  const pickAvatar = (file?: File) => { setError(''); if (!file) return; if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 2_000_000) return setError('JPG, PNG oder WebP bis 2 MB verwenden.'); if (preview) URL.revokeObjectURL(preview); setAvatar(file); setPreview(URL.createObjectURL(file)) }
-  const submit = async (event: FormEvent) => { event.preventDefault(); setError(''); if (name.trim().length < 2 || name.trim().length > 40) return setError('Der Anzeigename muss 2 bis 40 Zeichen lang sein.'); if (bio.length > 160) return setError('Die Bio darf höchstens 160 Zeichen lang sein.'); setSaving(true); try { await updateProfile(name, bio, avatar); setAvatar(undefined) } catch (cause) { setError(cause instanceof Error ? cause.message : 'Profil konnte nicht gespeichert werden.') } finally { setSaving(false) } }
+  const pickAvatar = async (file?: File) => {
+    setError('')
+    setAvatarStatus('')
+    if (!file) return
+    if (!['image/jpeg','image/png','image/webp'].includes(file.type)) return setError('Profilbild muss JPG, PNG oder WebP sein.')
+    if (file.size > 2_000_000) return setError('Profilbild darf höchstens 2 MB gross sein.')
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview)
+    const nextPreview = URL.createObjectURL(file)
+    setAvatarPreview(nextPreview)
+    setAvatarUploading(true)
+    setAvatarStatus('Profilbild wird hochgeladen…')
+    try {
+      await uploadProfileAvatar(file)
+      setAvatarStatus('Profilbild gespeichert.')
+      URL.revokeObjectURL(nextPreview)
+      setAvatarPreview('')
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Profilbild konnte nicht gespeichert werden.')
+      setAvatarStatus('')
+    } finally {
+      setAvatarUploading(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+    }
+  }
+  const avatarChanged = (event: ChangeEvent<HTMLInputElement>) => { void pickAvatar(event.target.files?.[0]) }
+  const submit = async (event: FormEvent) => { event.preventDefault(); setError(''); if (name.trim().length < 2 || name.trim().length > 40) return setError('Der Anzeigename muss 2 bis 40 Zeichen lang sein.'); if (bio.length > 160) return setError('Die Bio darf höchstens 160 Zeichen lang sein.'); setSaving(true); try { await updateProfile(name, bio) } catch (cause) { setError(cause instanceof Error ? cause.message : 'Profil konnte nicht gespeichert werden.') } finally { setSaving(false) } }
   const logout = async () => { setError(''); try { await signOut(); navigate('/login', { replace: true }) } catch { setError('Abmelden ist fehlgeschlagen. Bitte lade die Seite neu und versuche es erneut.') } }
   const visitedPlaces = places.filter((place) => visitedIds.has(place.id))
   const coverImage = ownPhotos[0]?.url || visitedPlaces.find((place) => place.image_url)?.image_url || places.find((place) => place.created_by === user.id && place.image_url)?.image_url || ''
 
   return <div className="profile-page content-page">
-    <section className="profile-hero"><div className="profile-cover" style={coverImage ? { backgroundImage: `url(${coverImage})` } : undefined}/><div className="profile-identity"><UserAvatar className="profile-avatar" url={preview || profile?.avatar_url} name={profile?.display_name || user.email} imageAlt="Profilbild"><label className="avatar-upload"><Camera/><span className="sr-only">Profilbild wählen</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => pickAvatar(event.target.files?.[0])}/></label></UserAvatar><div><div className="level-label"><Sparkles/> Explorer Level {level.level}</div><h1>{profile?.display_name || 'Neues Profil'}</h1><p>{profile?.bio || 'Erzähl der Community kurz, was du gern entdeckst.'}</p><div className="profile-xp" aria-label={`${level.progress} von ${level.target} XP bis Level ${level.nextLevel}`}><div><span>{stats.xp} XP gesamt</span><strong>Noch {level.remaining} XP bis Level {level.nextLevel}</strong></div><span><i style={{ width: `${levelProgress}%` }}/></span></div><div className="profile-actions">{isAdmin && <Link className="secondary-button" to="/admin"><ShieldCheck/> Adminbereich</Link>}<button className="secondary-button" type="button" onClick={logout}><LogOut/> Abmelden</button></div></div></div></section>
+    <section className="profile-hero"><div className="profile-cover" style={coverImage ? { backgroundImage: `url(${coverImage})` } : undefined}/><div className="profile-identity"><div className="profile-avatar-block"><UserAvatar className={`profile-avatar ${avatarUploading ? 'is-uploading' : ''}`} url={avatarPreview || profile?.avatar_url} name={profile?.display_name || user.email} imageAlt="Profilbild"><label className="avatar-upload"><Camera/><span className="sr-only">Profilbild wählen</span><input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" disabled={avatarUploading} onChange={avatarChanged}/></label></UserAvatar><button className="avatar-change-button" type="button" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}>{avatarUploading ? <LoaderCircle className="spin"/> : <Camera/>}{avatarUploading ? 'Wird hochgeladen…' : 'Profilbild ändern'}</button>{avatarStatus && <small className="avatar-upload-status" role="status">{avatarStatus}</small>}</div><div><div className="level-label"><Sparkles/> Explorer Level {level.level}</div><h1>{profile?.display_name || 'Neues Profil'}</h1><p>{profile?.bio || 'Erzähl der Community kurz, was du gern entdeckst.'}</p><div className="profile-xp" aria-label={`${level.progress} von ${level.target} XP bis Level ${level.nextLevel}`}><div><span>{stats.xp} XP gesamt</span><strong>Noch {level.remaining} XP bis Level {level.nextLevel}</strong></div><span><i style={{ width: `${levelProgress}%` }}/></span></div><div className="profile-actions">{isAdmin && <Link className="secondary-button" to="/admin"><ShieldCheck/> Adminbereich</Link>}<button className="secondary-button" type="button" onClick={logout}><LogOut/> Abmelden</button></div></div></div></section>
     <section className="profile-stats profile-stats-wide"><div><Star/><strong>{stats.xp}</strong><span>XP</span></div><div><MapPin/><strong>{stats.places}</strong><span>Orte</span></div><div><Image/><strong>{stats.photos}</strong><span>Fotos</span></div><div><Footprints/><strong>{stats.visited}</strong><span>Besucht</span></div><div><MessageCircle/><strong>{stats.comments}</strong><span>Kommentare</span></div><div><Bookmark/><strong>{favoriteIds.size}</strong><span>Gespeichert</span></div><div><UsersRound/><strong>{friendCount}</strong><span>Freunde</span></div></section>
     <nav className="profile-section-tabs" aria-label="Profilbereiche"><a href="#profile-places">Orte</a><a href="#profile-photos">Fotos</a><a href="#profile-badges">Badges</a><Link to="/friends">Aktivität</Link></nav>
     <div className="profile-grid"><section className="profile-main"><form className="profile-form" onSubmit={submit}><div><h2>Dein Profil</h2><p>So sehen dich andere Explorer.</p></div><label>Anzeigename<input value={name} onChange={(event) => setName(event.target.value)} maxLength={40} placeholder="Dein Name"/></label><label>Über dich<textarea value={bio} onChange={(event) => setBio(event.target.value)} maxLength={160} rows={3} placeholder="Was entdeckst du am liebsten?"/></label>{error && <p className="form-error" role="alert">{error}</p>}<button className="primary-button" disabled={saving}><Save/>{saving ? 'Speichern…' : 'Profil speichern'}</button></form><div className="profile-quick-links"><Link to="/favorites"><Bookmark/>Favoriten</Link><Link to="/trending"><Sparkles/>Trending</Link><Link to="/friends"><UsersRound/>Community</Link></div></section><aside className="achievements-panel" id="profile-badges"><h2><Award/> Badge-Sammlung</h2><p>{unlocked.length} von {achievements.length} Achievements freigeschaltet.</p><div className="achievement-grid">{achievements.map((achievement) => <div className={`achievement ${achievement.unlocked ? 'unlocked' : 'locked'}`} key={achievement.id}><span><Award/></span><div><strong>{achievement.title}</strong><small>{achievement.description}</small><i>{Math.min(achievement.progress, achievement.target)} / {achievement.target}</i></div></div>)}</div></aside></div>

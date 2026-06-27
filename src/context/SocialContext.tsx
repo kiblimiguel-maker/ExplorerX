@@ -26,6 +26,7 @@ type SocialContextValue = {
   toggleFavorite: (placeId: string) => Promise<void>
   toggleVisit: (placeId: string) => Promise<void>
   updateProfile: (displayName: string, bio: string, avatar?: File) => Promise<void>
+  uploadProfileAvatar: (avatar: File) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -211,6 +212,20 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     setMessage('Profil gespeichert.')
   }, [profile?.avatar_url, user])
 
+  const uploadProfileAvatar = useCallback(async (avatar: File) => {
+    if (!supabase || !user) throw new Error('Bitte zuerst anmelden.')
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(avatar.type) || avatar.size > 2_000_000) throw new Error('Profilbilder müssen JPG, PNG oder WebP und höchstens 2 MB gross sein.')
+    const ext = avatar.name.split('.').pop()?.toLowerCase() || 'webp'
+    const path = `${user.id}/avatar.${ext}`
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, avatar, { upsert: true, contentType: avatar.type })
+    if (uploadError) throw uploadError
+    const avatarUrl = `${supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl}?v=${Date.now()}`
+    const { data, error } = await supabase.from('users').update({ avatar_url: avatarUrl }).eq('id', user.id).select().single()
+    if (error) throw error
+    setProfile(data as Profile)
+    setMessage('Profilbild aktualisiert.')
+  }, [user])
+
   const achievements = useMemo<Achievement[]>(() => achievementsFor(stats), [stats])
 
   const signOut = useCallback(async () => {
@@ -218,7 +233,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     await loadAccount(null)
   }, [loadAccount])
 
-  const value = useMemo(() => ({ user, profile, stats, achievements, xpFeedback, favoriteIds, visitedIds, friendVisitCounts, friendVisitorsByPlace, isAdmin, isLoading, message, clearMessage: () => setMessage(''), showXpFeedback, recordProgress, toggleFavorite, toggleVisit, updateProfile, signOut }), [achievements, favoriteIds, friendVisitCounts, friendVisitorsByPlace, isAdmin, isLoading, message, profile, recordProgress, showXpFeedback, signOut, stats, toggleFavorite, toggleVisit, updateProfile, user, visitedIds, xpFeedback])
+  const value = useMemo(() => ({ user, profile, stats, achievements, xpFeedback, favoriteIds, visitedIds, friendVisitCounts, friendVisitorsByPlace, isAdmin, isLoading, message, clearMessage: () => setMessage(''), showXpFeedback, recordProgress, toggleFavorite, toggleVisit, updateProfile, uploadProfileAvatar, signOut }), [achievements, favoriteIds, friendVisitCounts, friendVisitorsByPlace, isAdmin, isLoading, message, profile, recordProgress, showXpFeedback, signOut, stats, toggleFavorite, toggleVisit, updateProfile, uploadProfileAvatar, user, visitedIds, xpFeedback])
   return <SocialContext.Provider value={value}>{children}</SocialContext.Provider>
 }
 
