@@ -26,7 +26,7 @@ type SocialContextValue = {
   toggleFavorite: (placeId: string) => Promise<void>
   toggleVisit: (placeId: string) => Promise<void>
   updateProfile: (displayName: string, bio: string, avatar?: File) => Promise<void>
-  uploadProfileAvatar: (avatar: File) => Promise<void>
+  uploadProfileAvatar: (avatar: File) => Promise<Profile>
   signOut: () => Promise<void>
 }
 
@@ -37,6 +37,14 @@ const readDemoFavorites = () => {
 }
 const readDemoVisits = () => {
   try { return new Set<string>(JSON.parse(localStorage.getItem('explorerx.visits.v2') || '[]')) } catch { return new Set<string>() }
+}
+const PROFILE_AVATAR_TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
+const PROFILE_AVATAR_MAX_BYTES = 2_000_000
+
+function profileAvatarPath(userId: string, avatar: File) {
+  const ext = PROFILE_AVATAR_TYPES[avatar.type]
+  if (!ext || avatar.size > PROFILE_AVATAR_MAX_BYTES) throw new Error('Profilbilder müssen JPG, PNG oder WebP und höchstens 2 MB gross sein.')
+  return `${userId}/avatar.${ext}`
 }
 
 export function SocialProvider({ children }: { children: ReactNode }) {
@@ -199,9 +207,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     if (!supabase || !user) throw new Error('Bitte zuerst anmelden.')
     let avatarUrl = profile?.avatar_url || null
     if (avatar) {
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(avatar.type) || avatar.size > 2_000_000) throw new Error('Profilbilder müssen JPG, PNG oder WebP und höchstens 2 MB gross sein.')
-      const ext = avatar.name.split('.').pop()?.toLowerCase() || 'webp'
-      const path = `${user.id}/avatar.${ext}`
+      const path = profileAvatarPath(user.id, avatar)
       const { error } = await supabase.storage.from('avatars').upload(path, avatar, { upsert: true, contentType: avatar.type })
       if (error) throw error
       avatarUrl = `${supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl}?v=${Date.now()}`
@@ -214,9 +220,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
 
   const uploadProfileAvatar = useCallback(async (avatar: File) => {
     if (!supabase || !user) throw new Error('Bitte zuerst anmelden.')
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(avatar.type) || avatar.size > 2_000_000) throw new Error('Profilbilder müssen JPG, PNG oder WebP und höchstens 2 MB gross sein.')
-    const ext = avatar.name.split('.').pop()?.toLowerCase() || 'webp'
-    const path = `${user.id}/avatar.${ext}`
+    const path = profileAvatarPath(user.id, avatar)
     const { error: uploadError } = await supabase.storage.from('avatars').upload(path, avatar, { upsert: true, contentType: avatar.type })
     if (uploadError) throw uploadError
     const avatarUrl = `${supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl}?v=${Date.now()}`
@@ -224,6 +228,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     setProfile(data as Profile)
     setMessage('Profilbild aktualisiert.')
+    return data as Profile
   }, [user])
 
   const achievements = useMemo<Achievement[]>(() => achievementsFor(stats), [stats])
